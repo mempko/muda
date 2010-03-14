@@ -1,0 +1,16 @@
+.new-muda {
+    border: 2px dashed #D1C7AC;
+	margin-bottom:4px;
+}
+
+.muda {
+    background-image:url(images/muda_bg.jpg);
+	background-repeat:repeat-x;
+	border:1px solid #d1c7ac;
+	color:#333333;
+	padding:3px;
+	margin-right:4px;
+	margin-bottom:4px;
+	font-family:tahoma, arial, sans-serif;
+}
+
