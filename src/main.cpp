@@ -5,6 +5,7 @@
 #include <Wt/WLineEdit>
 #include <Wt/WPushButton>
 #include <Wt/WText>
+#include <Wt/WLabel>
 
 #include "core/muda.h"
 #include "core/context.h"
@@ -24,34 +25,70 @@ class app : public WApplication
     public:
         app(const WEnvironment& env);
     private:
-        void create_ui();
+        void login_screen();
+        void muda_screen();
+        void create_mudas_ui();
         void add_muda_widget(mm::muda_ptr muda);
         void add_new_muda();
         void remove_muda(m::id_type id, mt::muda_widget* widget);
         void save_mudas();
         void load_mudas();
     private:
+        //login widgets
+        WLineEdit* _muda_file_edit;
+        std::string _muda_file;
+    private:
+        //muda widgets
         WLineEdit* _new_muda;
         mm::muda_list _mudas;
         mt::muda_widget_list _muda_widgets;
 };
 
-app::app(const WEnvironment& env) : WApplication(env)
+app::app(const WEnvironment& env) : 
+    WApplication(env),
+    _muda_file("global")
 {
-    create_ui();
+    login_screen();
+}
+
+void app::login_screen()
+{
+    root()->clear();
+    WHBoxLayout* layout = new WHBoxLayout;
+
+    layout->addWidget(new WLabel("Muda List:"), 0, AlignMiddle);
+    layout->addWidget( _muda_file_edit = new WLineEdit(_muda_file), 0, AlignMiddle);
+    _muda_file_edit->setFocus();
+    _muda_file_edit->setStyleClass("muda");
+
+    WPushButton* b = new WPushButton("Load");
+    layout->addWidget(b, 0, AlignMiddle);
+    layout->addStretch();
+
+    b->clicked().connect(bind(&app::muda_screen, this));
+    _muda_file_edit->enterPressed().connect(bind(&app::muda_screen, this));
+    root()->setLayout(layout);
+}
+
+void app::muda_screen()
+{
+    _muda_file = _muda_file_edit->text().narrow();
+    setTitle(_muda_file);
+    root()->clear();
+    create_mudas_ui();
     load_mudas();
 }
 
 void app::save_mudas()
 {
-    std::ofstream o("mudas.xml");
+    std::ofstream o(_muda_file.c_str());
     boost::archive::xml_oarchive oa(o);
 
     oa << BOOST_SERIALIZATION_NVP(_mudas);
 }
 void app::load_mudas()
 {
-    std::ifstream i("mudas.xml");
+    std::ifstream i(_muda_file.c_str());
     if(!i) return;
 
     boost::archive::xml_iarchive ia(i);
@@ -63,7 +100,7 @@ void app::load_mudas()
             bind(mem_fn(&app::add_muda_widget), this, _1));
 }
 
-void app::create_ui()
+void app::create_mudas_ui()
 {
     _new_muda = new WLineEdit(root());
     _new_muda->resize(WLength(99, WLength::Percentage), WLength::Auto);
