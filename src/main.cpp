@@ -119,8 +119,7 @@ void app::setup_view()
     root()->clear();
     create_header_ui();
 
-    if(_set_search) _search = _set_search;
-    else _search = _search = optional_regex();
+    _search = _set_search ? _set_search : optional_regex();
     _set_search = optional_regex();
 }
 
