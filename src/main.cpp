@@ -45,6 +45,7 @@ class app : public WApplication
         void note_view();
         WContainerWidget* create_menu();
     private:
+        bool do_search();
         void add_new_all_muda(mt::muda_list_widget* mudas);
         void add_new_triage_muda(mt::muda_list_widget* mudas);
         void add_new_now_muda(mt::muda_list_widget* mudas);
@@ -61,6 +62,7 @@ class app : public WApplication
         bool filter_by_done(mm::muda_ptr muda);
         bool filter_by_note(mm::muda_ptr muda);
         void set_search();
+        void clear_search();
     private:
         void clear_connections();
         void save_mudas();
@@ -326,6 +328,12 @@ void app::set_search()
     _set_search = boost::make_optional(e);
 }
 
+void app::clear_search()
+{
+    _search.reset();
+    _set_search.reset();
+}
+
 bool app::filter_by_search(mm::muda_ptr muda)
 try
 {
@@ -383,17 +391,22 @@ mm::muda_ptr app::add_new_muda()
     return muda;
 }
 
+bool app::do_search()
+{
+    if(_new_muda->text().value()[0] == L'/') 
+    {
+        set_search();
+        return true;
+    }
+    clear_search();
+    return _new_muda->text().value().size() == 0;
+}
+
 void app::add_new_all_muda(mt::muda_list_widget* mudas)
 {
     BOOST_ASSERT(_new_muda);
 
-    if(_new_muda->text().value().size() == 0) return;
-    if(_new_muda->text().value()[0] == L'/') 
-    {
-        set_search();
-        all_view();		
-        return;
-    }
+    if(do_search()) {all_view();return;}
 
     mm::muda_ptr muda = add_new_muda();
     muda->type().now();
@@ -404,13 +417,7 @@ void app::add_new_triage_muda(mt::muda_list_widget* mudas)
 {
     BOOST_ASSERT(_new_muda);
 
-    if(_new_muda->text().value().size() == 0) return;
-    if(_new_muda->text().value()[0] == L'/') 
-    {
-        set_search();
-        triage_view();
-        return;
-    }
+    if(do_search()) {triage_view();return;}
 
     mm::muda_ptr muda = add_new_muda();
     muda->type().now();
@@ -421,13 +428,7 @@ void app::add_new_now_muda(mt::muda_list_widget* mudas)
 {
     BOOST_ASSERT(_new_muda);
 
-    if(_new_muda->text().value().size() == 0) return;
-    if(_new_muda->text().value()[0] == L'/') 
-    {
-        set_search();
-        now_view();
-        return;
-    }
+    if(do_search()) {now_view();return;}
 
     mm::muda_ptr muda = add_new_muda();
     muda->type().now();
@@ -438,13 +439,7 @@ void app::add_new_later_muda(mt::muda_list_widget* mudas)
 {
     BOOST_ASSERT(_new_muda);
 
-    if(_new_muda->text().value().size() == 0) return;
-    if(_new_muda->text().value()[0] == L'/') 
-    {
-        set_search();
-        later_view();
-        return;
-    }
+    if(do_search()) {later_view();return;}
 
     mm::muda_ptr muda = add_new_muda();
     muda->type().later();
@@ -455,13 +450,7 @@ void app::add_new_done_muda(mt::muda_list_widget* mudas)
 {
     BOOST_ASSERT(_new_muda);
 
-    if(_new_muda->text().value().size() == 0) return;
-    if(_new_muda->text().value()[0] == L'/') 
-    {
-        set_search();
-        done_view();
-        return;
-    }
+    if(do_search()) {done_view();return;}
 
     mm::muda_ptr muda = add_new_muda();
     muda->type().done();
@@ -472,13 +461,7 @@ void app::add_new_note_muda(mt::muda_list_widget* mudas)
 {
     BOOST_ASSERT(_new_muda);
 
-    if(_new_muda->text().value().size() == 0) return;
-    if(_new_muda->text().value()[0] == L'/') 
-    {
-        set_search();
-        note_view();
-        return;
-    }
+    if(do_search()) {note_view();return;}
 
     mm::muda_ptr muda = add_new_muda();
     muda->type().note();
