@@ -21,10 +21,13 @@ project(muda)
 set(Boost_USE_STATIC_LIBS on)
 
 if(APPLE)
-	find_package(Boost 1.42 COMPONENTS filesystem date_time serialization regex signals thread)
+    set(Boost_LIBRARY_DIRS /opt/local/lib)
+    set(Boost_INCLUDE_DIRS /opt/local/include)
+    set(Boost_LIBRARIES boost_system boost_thread boost_regex boost_filesystem boost_date_time boost_serialization boost_signals boost_program_options)
 else()
 	find_package(Boost 1.46 COMPONENTS filesystem date_time serialization regex signals thread system)
 endif()
+
 link_directories(${Boost_LIBRARY_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
 
