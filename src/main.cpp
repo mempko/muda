@@ -97,7 +97,7 @@ class app : public WApplication
         //login widgets
         optional_regex _search;
         optional_regex _set_search;
-        m::text_type _user_name = "global";
+        m::text_type _user_name = "unknown";
         connections _connections;
 
     private:
@@ -288,6 +288,9 @@ void app::load_user()
     _user = _session.user();
     if(!_user)
         throw std::runtime_error{"no user with: " + _user_name};
+
+    if(_user->name().empty())
+        _user.modify()->name() = _user_name;
 
     CHECK(_user);
 
