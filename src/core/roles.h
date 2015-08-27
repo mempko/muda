@@ -126,15 +126,18 @@ namespace mempko { namespace muda { namespace role {
     template<class object_ptr, class id>
         struct id_is
         {
-            id_is(id v) : _v(v) {}
-            bool operator()(object_ptr obj) 
-            { 
-                bool remove = obj->id() == _v; 
-                if(remove) removed_obj = obj;
-                return remove;
-            }
-            id _v;
-            object_ptr removed_obj;
+            public:
+                id_is(id v, object_ptr& removed_obj) : 
+                    _v(v), _removed_obj(removed_obj) {}
+                bool operator()(object_ptr obj) 
+                { 
+                    bool remove = obj->id() == _v; 
+                    if(remove) _removed_obj = obj;
+                    return remove;
+                }
+            private:
+                id _v;
+                object_ptr& _removed_obj;
         };
 
     template<class container, class object_ptr, class id>
@@ -144,10 +147,11 @@ namespace mempko { namespace muda { namespace role {
             public:
                 virtual bool remove(id v)
                 {
-                    id_is<object_ptr, id> pred(v);
+                    object_ptr removed_obj;
+                    id_is<object_ptr, id> pred(v, removed_obj);
                     self()->list().remove_if(pred);
-                    if(pred.removed_obj) _sig(pred.removed_obj);
-                    return pred.removed_obj;
+                    if(removed_obj) _sig(removed_obj);
+                    return removed_obj;
                 }
 
             public:
