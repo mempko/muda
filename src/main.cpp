@@ -375,7 +375,7 @@ WContainerWidget* app::create_menu()
     auto all = create_menu_label("all", "btn muda-all-button");
     all->clicked().connect (std::bind(&app::all_view, this));
 
-    auto triage = create_menu_label("prioritize", "btn muda-all-button");
+    auto triage = create_menu_label("prioritize", "btn muda-pri-button");
     triage->clicked().connect (std::bind(&app::triage_view, this));
 
     auto now = create_menu_label("now", "btn muda-now-button");
@@ -391,7 +391,9 @@ WContainerWidget* app::create_menu()
     note->clicked().connect (std::bind(&app::note_view, this));
 
     auto settings = create_small_label("&#9881;", "sbtn muda-settings-button");
+    settings->setToolTip("settings");
     auto logout = create_small_label("&#10060;", "sbtn muda-settings-button");
+    logout->setToolTip("logout");
 
     std::vector<WLabel*> menu = { all, triage, now, later, done, note, settings, logout};
 
