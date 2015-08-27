@@ -5,7 +5,13 @@
 }
 
 .muda-container {
+	margin-top:8px;
 	margin-bottom:4px;
+}
+
+.menu-container {
+    height:25px;
+	margin-bottom:8px;
 }
 
 .text-box {
@@ -54,10 +60,6 @@
 	color:#333333;
 	padding:3px;
 	font-family:tahoma, arial, sans-serif;
-}
-
-.menu-container {
-	margin-bottom:8px;
 }
 
 .btn {
