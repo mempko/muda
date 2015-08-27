@@ -23,13 +23,15 @@ set(Boost_USE_STATIC_LIBS on)
 if(APPLE)
 	find_package(Boost 1.42 COMPONENTS filesystem date_time serialization regex signals thread)
 else()
-	find_package(Boost 1.42 COMPONENTS filesystem date_time serialization regex signals )
+	find_package(Boost 1.46 COMPONENTS filesystem date_time serialization regex signals thread system)
 endif()
 link_directories(${Boost_LIBRARY_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
 
 #setup wt
-link_directories(${muda_SOURCE_DIR}/external/wt/lib)
-include_directories(${muda_SOURCE_DIR}/external/wt/include)
+#link_directories(${muda_SOURCE_DIR}/external/wt/lib)
+#include_directories(${muda_SOURCE_DIR}/external/wt/include)
+link_directories(/usr/local/lib)
+include_directories(/usr/local/include)
 
 add_subdirectory(src)
