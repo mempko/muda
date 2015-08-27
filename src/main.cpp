@@ -532,8 +532,12 @@ void app::make_prioritize_view(mt::muda_vec& v)
 
     //put done first, then later, then now
     //This order is important because it will show up in reverse when added to the muda list
-    auto done_end = std::stable_partition(v.begin(), v.end(), [](auto m){ return m->type().state() == m::DONE;});
-    std::stable_partition(done_end, v.end(), [](auto m){ return m->type().state() == m::LATER;});
+    std::stable_sort(
+            v.begin(), v.end(), [](auto a, auto b)
+            { 
+                return static_cast<int>(a->type().state()) > static_cast<int>(b->type().state());
+            }
+            );
 }
 
 mm::muda_dptr app::add_new_muda()
