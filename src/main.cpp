@@ -350,6 +350,16 @@ void app::load_user()
     _mudas = lists.front();
 }
 
+WLabel* create_small_label(WString text, WString css_class)
+{
+    WLabel* l = new WLabel{text};
+    l->setStyleClass(css_class);
+    l->resize(WLength(20, WLength::FontEm), WLength::Auto);
+
+    ENSURE(l);
+    return l;
+}
+
 WLabel* create_menu_label(WString text, WString css_class)
 {
     WLabel* l = new WLabel{text};
@@ -365,7 +375,7 @@ WContainerWidget* app::create_menu()
     auto all = create_menu_label("all", "btn muda-all-button");
     all->clicked().connect (std::bind(&app::all_view, this));
 
-    auto triage = create_menu_label("triage", "btn muda-all-button");
+    auto triage = create_menu_label("prioritize", "btn muda-all-button");
     triage->clicked().connect (std::bind(&app::triage_view, this));
 
     auto now = create_menu_label("now", "btn muda-now-button");
@@ -380,8 +390,10 @@ WContainerWidget* app::create_menu()
     auto note = create_menu_label("note", "btn muda-note-button");
     note->clicked().connect (std::bind(&app::note_view, this));
 
-    std::vector<WLabel*> menu = { all, triage, now, later, done, note};
-    unsigned int last = menu.size() - 1;
+    auto settings = create_small_label("&#9881;", "sbtn muda-settings-button");
+    auto logout = create_small_label("&#10060;", "sbtn muda-settings-button");
+
+    std::vector<WLabel*> menu = { all, triage, now, later, done, note, settings, logout};
 
     auto tabs = new WContainerWidget;
     auto layout = new WHBoxLayout;
@@ -392,7 +404,7 @@ WContainerWidget* app::create_menu()
     {
         layout->addWidget(m);
         layout->setStretchFactor(m, 1);
-        if(m != note) layout->addSpacing(WLength(8, WLength::Pixel));
+        if(m != settings) layout->addSpacing(WLength(8, WLength::Pixel));
     }
 
     layout->setContentsMargins(0,0,0,0);
