@@ -186,7 +186,16 @@ void app::settings_screen()
     _new_muda->hide();
 
     root()->addWidget(new WText{_user_name});
-    root()->addWidget(new WText{_user_email});
+
+    auto auth_model = new wo::AuthModel{mt::session::auth(), _session->users(), this};
+    auth_model->addPasswordAuth(&mt::session::password_auth());
+    auth_model->addOAuth(mt::session::oauth());
+
+    _authw = new wo::AuthWidget{_session->login()};
+    _authw->setModel(auth_model);
+
+    auto pw = _authw->createUpdatePasswordView(_session->login().user(), true);
+    root()->addWidget(pw);
 
     ENSURE(_user);
     ENSURE(_mudas);
