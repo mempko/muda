@@ -31,6 +31,17 @@ namespace mempko { namespace muda { namespace wt {
         create_ui();
     }
 
+    muda_list_widget::~muda_list_widget()
+    {
+        clear_connections();
+    }
+
+    void muda_list_widget::clear_connections()
+    {
+        for(auto c : _connections) c.disconnect();
+        _connections.clear();
+    }
+
     void muda_list_widget::create_ui()
     {
         _root->resize(w::WLength(100, w::WLength::Percentage), w::WLength::Auto);
@@ -52,13 +63,13 @@ namespace mempko { namespace muda { namespace wt {
         //do not add if it does not pass filter
         if(!_filter(muda)) return;
 
-        muda->when_text_changes(bind(&muda_list_widget::fire_update_sig, this));
+        _connections.push_back(muda->when_text_changes(bind(&muda_list_widget::fire_update_sig, this)));
 
         //create new muda widget and add it to widget list
         muda_widget* new_widget = new muda_widget(muda);
 
-        new_widget->when_delete_pressed(bind(&muda_list_widget::remove_muda, this, _1, _2));
-        new_widget->when_type_pressed(bind(&muda_list_widget::fire_update_sig, this));
+        _connections.push_back(new_widget->when_delete_pressed(bind(&muda_list_widget::remove_muda, this, _1, _2)));
+        _connections.push_back(new_widget->when_type_pressed(bind(&muda_list_widget::fire_update_sig, this)));
 
         if(_muda_widgets.empty()) _root->addWidget(new_widget);
         else _root->insertBefore(new_widget, _muda_widgets.back());

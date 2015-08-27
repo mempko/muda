@@ -242,6 +242,7 @@ void clear_connection(boost::signals2::connection& c)
 void app::clear_connections()
 {
     std::for_each(_connections.begin(), _connections.end(), clear_connection);
+    _connections.clear();
 }
 
 void app::save_mudas()
