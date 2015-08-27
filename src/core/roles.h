@@ -26,11 +26,11 @@ namespace mempko { namespace muda { namespace role {
                 {
                     self()->text(text);
                     BOOST_ASSERT(self()->text() == text);
-                    _sig(*self());
+                    _sig();
                 }
 
             public:
-                typedef boost::signals2::signal<void (const m&)> sig;				
+                typedef boost::signals2::signal<void ()> sig;				
                 typedef boost::signals2::connection connection;
                 typedef typename sig::slot_type slot_type;
                 connection when_text_changes(const slot_type& slot) { return _sig.connect(slot);}
@@ -98,11 +98,11 @@ namespace mempko { namespace muda { namespace role {
                 virtual bool add(t& object) 
                 {
                     self()->list().push_back(object);
-                    _sig(*self());
+                    _sig();
                     return true;
                 }
             public:
-                typedef boost::signals2::signal<void (const list_t&)> sig;				
+                typedef boost::signals2::signal<void ()> sig;				
                 typedef typename sig::slot_type slot_type;
                 void when_object_added(const slot_type& slot) { _sig.connect(slot);}
             private:

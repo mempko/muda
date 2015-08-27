@@ -2,6 +2,7 @@
 #define MEMPKO_MUDA_WIDGET_H
 
 #include <iostream>
+#include <list>
 
 #include <Wt/WCompositeWidget>
 #include <Wt/WContainerWidget>
@@ -20,7 +21,7 @@ namespace mempko { namespace muda { namespace wt {
         private:
             void create_ui();
             void change_text();
-            void update_text(const model::muda& muda);
+            void update_text();
         private:
             model::muda_ptr _muda;
             boost::signals2::connection _when_text_changes;
@@ -28,6 +29,8 @@ namespace mempko { namespace muda { namespace wt {
             Wt::WContainerWidget* _layout;
 
     };
+
+    typedef std::list<muda_widget*> muda_widget_list;
 
 }}}//namespace
 

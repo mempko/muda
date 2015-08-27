@@ -5,10 +5,11 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/xml_oarchive.hpp>
+#include <boost/archive/xml_iarchive.hpp>
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/list.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 
 #include "core/types.h"
 #include "core/roles.h"
@@ -33,9 +34,12 @@ namespace mempko { namespace muda { namespace model {
             id_type _id;
 
         private:
+
+            friend class boost::serialization::access;
             template<class Archive>
                 void serialize(Archive & ar, const unsigned int version)
                 {
+                    using namespace boost::serialization;
                     ar & make_nvp("id", _id);
                     ar & make_nvp("text", _text);
                 }
@@ -52,6 +56,8 @@ namespace mempko { namespace muda { namespace model {
             typedef muda_ptr_list list_type;
             typedef list_type::iterator iterator;
             typedef list_type::const_iterator const_iterator;
+            typedef list_type::reverse_iterator reverse_iterator;
+            typedef list_type::const_reverse_iterator const_reverse_iterator;
 
             list_type& list() { return _list;}
             const list_type& list() const { return _list;}
@@ -60,10 +66,24 @@ namespace mempko { namespace muda { namespace model {
             iterator end() { return _list.end();}
             const_iterator begin() const { return _list.begin();}
             const_iterator end() const { return _list.end();}
+            reverse_iterator rbegin() { return _list.rbegin();}
+            reverse_iterator rend() { return _list.rend();}
+            const_reverse_iterator rbegin() const { return _list.rbegin();}
+            const_reverse_iterator rend() const { return _list.rend();}
 
             list_type::size_type size() const { return _list.size();}
         private:
             list_type _list;
+
+        private:
+
+            friend class boost::serialization::access;
+            template<class Archive>
+                void serialize(Archive & ar, const unsigned int version)
+                {
+                    using namespace boost::serialization;
+                    ar & make_nvp("mudas", _list);
+                }
     };
 
     class text_value : public role::modifable_text_and_notify<text_value>
@@ -75,9 +95,12 @@ namespace mempko { namespace muda { namespace model {
             text_type _text;
 
         private:
+
+            friend class boost::serialization::access;
             template<class Archive>
                 void serialize(Archive & ar, const unsigned int version)
                 {
+                    using namespace boost::serialization;
                     ar & make_nvp("text", _text);
                 }
     };
@@ -96,9 +119,11 @@ namespace mempko { namespace muda { namespace model {
             text_value _email;
         private:
 
+            friend class boost::serialization::access;
             template<class Archive>
                 void serialize(Archive & ar, const unsigned int version)
                 {
+                    using namespace boost::serialization;
                     ar & make_nvp("name", _name);
                     ar & make_nvp("email", _email);
                 }
@@ -112,6 +137,7 @@ namespace mempko { namespace muda { namespace model {
 namespace mempko { namespace muda { namespace context { 
     //useful typedefs
     typedef add_object<model::muda,model::muda_ptr,model::muda_list> add_muda;
+    typedef modify_text_context<model::muda> modify_muda_text;
 
 }}}//namespace
 
