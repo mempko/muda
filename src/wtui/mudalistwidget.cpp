@@ -50,12 +50,6 @@ namespace mempko { namespace muda { namespace wt {
             bind(mem_fn(&muda_list_widget::add_muda), this, _1));
     }
 
-    void muda_list_widget::update()
-    {
-        _root->clear();
-        create_ui();
-    }
-
     void muda_list_widget::add_muda(model::muda_ptr muda)
     {
         BOOST_ASSERT(muda);
@@ -81,13 +75,14 @@ namespace mempko { namespace muda { namespace wt {
     {
         context::remove_muda remove(id, _mudas); remove();
 
+        fire_update_sig();
         _muda_widgets.remove(widget);
         _root->removeWidget(widget);
-        fire_update_sig();
     }
 
     void muda_list_widget::fire_update_sig()
     {
+        BOOST_ASSERT(this);
         _update_sig();
     }
 

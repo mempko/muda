@@ -49,7 +49,6 @@ namespace mempko { namespace muda { namespace wt {
             connection when_model_updated(const update_slot& slot);
         public:
             void add_muda(model::muda_ptr muda);
-            void update();
         private:
             void create_ui();
             void remove_muda(id_type id, muda_widget* widget);

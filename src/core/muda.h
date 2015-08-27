@@ -35,7 +35,10 @@
 
 namespace mempko { namespace muda { namespace model { 
 
+#define LOCK boost::mutex::scoped_lock lll(this->mutex())
+
     class muda_type : 
+        public role::lockable,
         public role::transitional_state<muda_type>,
         public role::ptime_stampable_when_modified<muda_type>
     {
@@ -44,15 +47,15 @@ namespace mempko { namespace muda { namespace model {
 
         public:
             muda_state state() const { return _state;} 
-            void state(muda_state s) { _state = s;} 
+            void state(muda_state s) { LOCK; _state = s; } 
 
-            void now() { _state = NOW;}
-            void later() { _state = LATER;}
-            void done() { _state = DONE;}
-            void note() { _state = NOTE;}
+            void now() { LOCK; _state = NOW;}
+            void later() { LOCK; _state = LATER;}
+            void done() { LOCK; _state = DONE;}
+            void note() { LOCK; _state = NOTE;}
 
             time modified() const { return _modified;}
-            void modified(const time& t) { _modified = t;}
+            void modified(const time& t) { LOCK; _modified = t;}
         private:
             muda_state _state;
             time _modified;
@@ -62,6 +65,7 @@ namespace mempko { namespace muda { namespace model {
             template<class Archive>
                 void serialize(Archive & ar, const unsigned int version)
                 {
+                    LOCK;
                     using namespace boost::serialization;
                     ar & make_nvp("state", _state);
                     ar & make_nvp("modified", _modified);
@@ -69,6 +73,7 @@ namespace mempko { namespace muda { namespace model {
     };
 
 	class muda : 
+        public role::lockable,
         public role::modifable_text<muda>,
         public role::simple_id_reciever<muda>,
         public role::ptime_stampable_when_created<muda>,
@@ -77,19 +82,19 @@ namespace mempko { namespace muda { namespace model {
         public:
             muda() : _text(), _id(0), _type() {}
             const text_type& text() const { return _text;}
-            void text(const text_type& text) { _text = text;}
+            void text(const text_type& text) { LOCK; _text = text;}
 
             id_type id() const { return _id;}
-            void id(id_type v) { _id = v;}
+            void id(id_type v) { LOCK; _id = v;}
 
-            muda_type& type() {return _type;}
             const muda_type& type() const {return _type;}
+            muda_type& type() {return _type;}
 
             time created() const { return _created;}
-            void created(const time& t) { _created = t;}
+            void created(const time& t) { LOCK; _created = t;}
 
             time modified() const { return _modified;}
-            void modified(const time& t) { _modified = t;}
+            void modified(const time& t) { LOCK; _modified = t;}
 
         private:
             text_type _text;
@@ -104,6 +109,7 @@ namespace mempko { namespace muda { namespace model {
             template<class Archive>
                 void serialize(Archive & ar, const unsigned int version)
                 {
+                    LOCK;
                     using namespace boost::serialization;
                     ar & make_nvp("id", _id);
                     ar & make_nvp("text", _text);
@@ -117,6 +123,7 @@ namespace mempko { namespace muda { namespace model {
     typedef std::list<muda_ptr> muda_ptr_list;
 
     class muda_list : 
+        public role::lockable,
         public role::iterable_with_list<muda_list, muda_ptr_list>,
         public role::appendable_container<muda_list,muda_ptr>,
         public role::removable_container<muda_list, muda_ptr, id_type>
@@ -150,12 +157,14 @@ namespace mempko { namespace muda { namespace model {
             template<class Archive>
                 void serialize(Archive & ar, const unsigned int version)
                 {
+                    LOCK;
                     using namespace boost::serialization;
                     ar & make_nvp("mudas", _list);
                 }
     };
 
     class text_value : 
+        public role::lockable,
         public role::ptime_stampable_when_modified<text_value>,
         public role::modifable_text<text_value>
     {
@@ -206,6 +215,7 @@ namespace mempko { namespace muda { namespace model {
     };
 
 
+#undef LOCK
 
 
 }}}//namespace

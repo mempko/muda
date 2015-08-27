@@ -21,11 +21,23 @@
 #include <boost/assert.hpp>
 #include <boost/bind.hpp>
 #include <boost/signals2.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/thread/mutex.hpp>
 
 #include "core/types.h"
 #include "core/dci.h"
 
 namespace mempko { namespace muda { namespace role {
+
+#define LOCK boost::mutex::scoped_lock l(self()->mutex())
+
+    class lockable
+    {
+        public:
+            boost::mutex& mutex() { return _m;}
+        private:
+            boost::mutex _m;
+    };
 
     template< class tag>
         class signaler0
@@ -153,8 +165,9 @@ namespace mempko { namespace muda { namespace role {
             public:
                 virtual bool add(object& obj) 
                 {
+                    LOCK;
                     self()->list().push_back(obj);
-                    signal();
+                    this->signal();
                     return true;
                 }
 
@@ -198,10 +211,11 @@ namespace mempko { namespace muda { namespace role {
             public:
                 virtual bool remove(id v)
                 {
+                    LOCK;
                     object_ptr removed_obj;
                     id_is<object_ptr, id> pred(v, removed_obj);
                     self()->list().remove_if(pred);
-                    if(removed_obj) signal(removed_obj);
+                    if(removed_obj) this->signal(removed_obj);
                     return removed_obj;
                 }
 
@@ -240,7 +254,7 @@ namespace mempko { namespace muda { namespace role {
                 }
                 BOOST_ASSERT(initial_state != self()->state());
                 self()->stamp_modified();
-                signal();
+                this->signal();
             }
         public:
             connection when_type_changes(const slot_type& slot) { return when_signaled(slot);}
@@ -287,6 +301,8 @@ namespace mempko { namespace muda { namespace role {
                     self()->modified(now);
                 }
         };
+
+#undef LOCK
 
 }}} //namespace
 
