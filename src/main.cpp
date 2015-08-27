@@ -56,6 +56,7 @@ class app : public WApplication
     public:
         app(const WEnvironment& env);
     private:
+        void set_view();
         void login_screen();
         void oauth_event();
         void startup_muda_screen();
@@ -107,7 +108,6 @@ class app : public WApplication
     private:
         //muda widgets
         WLineEdit* _new_muda = nullptr;
-        WStackedWidget* _stack = nullptr;
         mt::session_ptr _session;
         mm::user_dptr _user;
         mm::muda_list_dptr _mudas;
@@ -122,8 +122,9 @@ app::app(const WEnvironment& env) : WApplication{env}
         throw std::invalid_argument("db configuration is missing");
 
     _session = std::make_shared<mt::session>(db);
+    _session->login().changed().connect(this, &app::oauth_event);
 
-    login_screen();
+    set_view();
 
     ENSURE(_session);
 }
@@ -131,13 +132,11 @@ app::app(const WEnvironment& env) : WApplication{env}
 
 void app::login_screen()
 {
+    REQUIRE_FALSE(_session->login().loggedIn());
     INVARIANT(root());
     INVARIANT(_session);
 
-    root()->clear();
     root()->addStyleClass("container");
-
-    _session->login().changed().connect(this, &app::oauth_event);
 
     auto auth_model = new wo::AuthModel{mt::session::auth(), _session->users(), this};
     auth_model->addPasswordAuth(&mt::session::password_auth());
@@ -148,22 +147,29 @@ void app::login_screen()
     _authw->setRegistrationEnabled(true);
     _authw->processEnvironment();
 
-    _stack = new WStackedWidget;
-
     /////////////////////////////////////////
 
     root()->addWidget(new WText{"<div class='login-header'>Muda</div>"});
 
-    root()->addWidget(_authw);
-    root()->addWidget(_stack);
+    if(!_authw->login().loggedIn())
+        root()->addWidget(_authw);
+    else
+        startup_muda_screen();
+}
+
+void app::set_view()
+{
+    root()->clear();
+
+    if(_session->login().loggedIn()) startup_muda_screen();
+    else login_screen();
 }
 
 void app::oauth_event()
 {
     INVARIANT(_session);
 
-    if(_session->login().loggedIn()) startup_muda_screen();
-    else login_screen();
+    set_view();
 }
 
 void app::startup_muda_screen()
@@ -171,7 +177,6 @@ void app::startup_muda_screen()
     INVARIANT(_session);
     _user_name = _session->user_name();
     _user_email = _session->email();
-    std::cout << "EMAIL: " << _user_email << std::endl;
 
     setTitle(_user_name);
     load_user();
