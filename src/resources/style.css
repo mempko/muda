@@ -52,6 +52,7 @@
 	padding:3px;
 	font-family:tahoma, arial, sans-serif;
 }
+
 .muda-done {
 	background-repeat:repeat-x;
 	border:1px solid #d1c7ac;
@@ -99,6 +100,7 @@
 	width: 1em;
 	padding: 0px;
 }
+
 .muda-all-button {
 	background-color:#084B8A;
 }
@@ -110,12 +112,15 @@
 .muda-now-button {
 	background-color:#088A08;
 }
+
 .muda-later-button {
 	background-color:#868A08;
 }
+
 .muda-done-button {
 	background-color:#2E2E2E;
 }
+
 .muda-note-button {
 	background-color:#A4A4A4;
 }
@@ -133,7 +138,6 @@
 .dirty {
     color: red;
 }
-
 
 .Wt-auth-logged-in {
     text-align: right;

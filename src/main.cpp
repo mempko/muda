@@ -179,7 +179,11 @@ void app::settings_screen()
     REQUIRE(_session->login().loggedIn());
     REQUIRE(_user);
 
-    root()->clear();
+    setup_view();
+
+    //hide new muda widget
+    CHECK(_new_muda);
+    _new_muda->hide();
 
     root()->addWidget(new WText{_user_name});
     root()->addWidget(new WText{_user_email});
@@ -447,8 +451,8 @@ void app::create_header_ui()
     root()->addWidget(menu);
 
     _new_muda = new WLineEdit;
-    _new_muda->resize(WLength(100, WLength::Percentage), WLength::Auto);
     _new_muda->setStyleClass("new-muda");
+    _new_muda->resize(WLength(100, WLength::Percentage), WLength::Auto);
     _new_muda->setFocus();
 
     auto hbox = new WHBoxLayout;
@@ -592,13 +596,14 @@ bool app::do_search()
 {
     INVARIANT(_new_muda);
 
-    if(_new_muda->text().value()[0] == L'/') 
+    auto mt = _new_muda->text().value();
+    if(!mt.empty() && mt[0] == L'/') 
     {
         set_search();
         return true;
     }
     clear_search();
-    return _new_muda->text().value().size() == 0;
+    return mt.size() == 0;
 }
 
 void app::add_new_triage_muda(mt::muda_list_widget* mudas)
@@ -607,9 +612,9 @@ void app::add_new_triage_muda(mt::muda_list_widget* mudas)
     INVARIANT(_new_muda);
     INVARIANT(_session);
 
-    dbo::Transaction t{_session->dbs()};
-
     if(do_search()) {triage_view();return;}
+
+    dbo::Transaction t{_session->dbs()};
 
     auto muda = add_new_muda();
     muda.modify()->type().now();
@@ -622,9 +627,9 @@ void app::add_new_now_muda(mt::muda_list_widget* mudas)
     INVARIANT(_new_muda);
     INVARIANT(_session);
 
-    dbo::Transaction t{_session->dbs()};
-
     if(do_search()) {now_view();return;}
+
+    dbo::Transaction t{_session->dbs()};
 
     auto muda = add_new_muda();
     muda.modify()->type().now();
@@ -637,9 +642,9 @@ void app::add_new_later_muda(mt::muda_list_widget* mudas)
     INVARIANT(_new_muda);
     INVARIANT(_session);
 
-    dbo::Transaction t{_session->dbs()};
-
     if(do_search()) {later_view();return;}
+
+    dbo::Transaction t{_session->dbs()};
 
     auto muda = add_new_muda();
     muda.modify()->type().later();
@@ -652,9 +657,9 @@ void app::add_new_done_muda(mt::muda_list_widget* mudas)
     INVARIANT(_new_muda);
     INVARIANT(_session);
 
-    dbo::Transaction t{_session->dbs()};
-
     if(do_search()) {done_view();return;}
+
+    dbo::Transaction t{_session->dbs()};
 
     auto muda = add_new_muda();
     muda.modify()->type().done();
@@ -667,9 +672,9 @@ void app::add_new_note_muda(mt::muda_list_widget* mudas)
     INVARIANT(_new_muda);
     INVARIANT(_session);
 
-    dbo::Transaction t{_session->dbs()};
-
     if(do_search()) {note_view();return;}
+
+    dbo::Transaction t{_session->dbs()};
 
     auto muda = add_new_muda();
     muda.modify()->type().note();
