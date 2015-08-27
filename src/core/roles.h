@@ -10,6 +10,37 @@
 
 namespace mempko { namespace muda { namespace role {
 
+    template< class tag>
+        class signaler0
+        {
+            public:
+                typedef boost::signals2::signal<void ()> sig;				
+                typedef boost::signals2::connection connection;
+                typedef typename sig::slot_type slot_type;
+                connection when_signaled(const slot_type& slot) { return _sig.connect(slot);}
+            protected:
+
+                void signal() { _sig();}
+            private:
+                sig _sig;
+        };
+
+    template< class tag, class obj>
+        class signaler1
+        {
+            public:
+                typedef boost::signals2::signal<void (obj)> sig;				
+                typedef boost::signals2::connection connection;
+                typedef typename sig::slot_type slot_type;
+                connection when_signaled(const slot_type& slot) { return _sig.connect(slot);}
+            protected:
+
+                void signal(obj o) { _sig(o);}
+
+            private:
+                sig _sig;
+        };
+
     template<class m, class value>
         class modifiable_object 
         {
@@ -18,8 +49,13 @@ namespace mempko { namespace muda { namespace role {
                 virtual ~modifiable_object(){}
         };
 
+
+    TAG(text_change);
+
     template <class m>
-        class modifable_text_and_notify : public modifiable_object<m, text_type> 
+        class modifable_text : 
+            public modifiable_object<m, text_type>,
+            public signaler0<text_change> 
         {
             ADD_SELF(m)
             public:
@@ -28,17 +64,11 @@ namespace mempko { namespace muda { namespace role {
                     self()->text(text);
                     self()->stamp_modified();
                     BOOST_ASSERT(self()->text() == text);
-                    _sig();
+                    signal();
                 }
 
             public:
-                typedef boost::signals2::signal<void ()> sig;				
-                typedef boost::signals2::connection connection;
-                typedef typename sig::slot_type slot_type;
-                connection when_text_changes(const slot_type& slot) { return _sig.connect(slot);}
-            private:
-                sig _sig;
-
+                connection when_text_changes(const slot_type& slot) { return when_signaled(slot);}
         };
 
     template<class m>
@@ -95,24 +125,23 @@ namespace mempko { namespace muda { namespace role {
                 virtual ~appendable_container(){}
         };
 
+    TAG(when_appended)
+
     template<class container, class object>
-        class appendable_container_and_notifier : public appendable_container<object>
+        class appendable_container : 
+            public appendable<object>,
+            public signaler0<when_appended>
         {
             ADD_SELF(container)
             public:
                 virtual bool add(object& obj) 
                 {
                     self()->list().push_back(obj);
-                    _sig();
+                    signal();
                     return true;
                 }
             public:
-                typedef boost::signals2::signal<void ()> sig;				
-                typedef boost::signals2::connection connection;
-                typedef typename sig::slot_type slot_type;
-                connection when_object_added(const slot_type& slot) { return _sig.connect(slot);}
-            private:
-                sig _sig;
+                connection when_object_added(const slot_type& slot) { return when_signaled(slot);}
         };
 
     template<class handle>
@@ -140,8 +169,12 @@ namespace mempko { namespace muda { namespace role {
                 object_ptr& _removed_obj;
         };
 
+    TAG(when_removed)
+
     template<class container, class object_ptr, class id>
-        class removable_container_and_notifier : public removable_container<id>
+        class removable_container : 
+            public removable<id>,
+            public signaler1<when_removed, object_ptr>
         {
             ADD_SELF(container)
             public:
@@ -150,17 +183,14 @@ namespace mempko { namespace muda { namespace role {
                     object_ptr removed_obj;
                     id_is<object_ptr, id> pred(v, removed_obj);
                     self()->list().remove_if(pred);
-                    if(removed_obj) _sig(removed_obj);
+                    if(removed_obj) signal(removed_obj);
                     return removed_obj;
                 }
 
             public:
-                typedef boost::signals2::signal<void (object_ptr)> sig;				
-                typedef boost::signals2::connection connection;
-                typedef typename sig::slot_type slot_type;
-                connection when_object_removed(const slot_type& slot) { return _sig.connect(slot);}
-            private:
-                sig _sig;
+                typedef typename signaler1<when_removed, object_ptr>::connection connection;
+                typedef typename signaler1<when_removed, object_ptr>::slot_type slot_type;
+                connection when_object_removed(const slot_type& slot) { return when_signaled(slot);}
         };
 
     class transitional_object
@@ -170,8 +200,13 @@ namespace mempko { namespace muda { namespace role {
             virtual ~transitional_object(){}
     };
 
+    TAG(when_state_changes)
+
     template<class type>
-    class transitional_state_and_notify : public transitional_object
+    class transitional_state : 
+        public transitional_object,
+        public signaler0<when_state_changes>
+
     {
         ADD_SELF(type)
         public:
@@ -187,16 +222,10 @@ namespace mempko { namespace muda { namespace role {
                 }
                 BOOST_ASSERT(initial_state != self()->state());
                 self()->stamp_modified();
-                _sig();
+                signal();
             }
         public:
-            typedef boost::signals2::signal<void ()> sig;				
-            typedef boost::signals2::connection connection;
-            typedef typename sig::slot_type slot_type;
-            connection when_type_changes(const slot_type& slot) { return _sig.connect(slot);}
-
-        private:
-            sig _sig;
+            connection when_type_changes(const slot_type& slot) { return when_signaled(slot);}
     };
 
     template<class type>
