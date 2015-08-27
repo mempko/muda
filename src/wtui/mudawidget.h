@@ -40,7 +40,7 @@ namespace mempko
         namespace wt 
         { 
 
-            class muda_widget : public Wt::WCompositeWidget
+            class muda_widget : public Wt::WContainerWidget
             {
                 public:
                     muda_widget(

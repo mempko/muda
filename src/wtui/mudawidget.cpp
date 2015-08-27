@@ -59,15 +59,13 @@ namespace mempko
                     dbo::Session& s,
                     model::muda_dptr muda, 
                     w::WContainerWidget* parent) :
-                w::WCompositeWidget{parent},
+                w::WContainerWidget{parent},
                 _muda{muda}, _session{s}
             {
                 REQUIRE(muda);
 
-                setImplementation(_root = new w::WContainerWidget);
                 create_ui();
 
-                ENSURE(_root);
                 ENSURE(_muda);
             }
 
@@ -80,10 +78,6 @@ namespace mempko
             void muda_widget::create_ui()
             {
                 INVARIANT(_muda);
-                INVARIANT(_root);
-
-                implementStateless(&muda_widget::show_buttons, &muda_widget::hide_buttons);
-
 
                 //create text editor
                 _edit = new w::WLineEdit;
@@ -91,10 +85,8 @@ namespace mempko
                 _edit->setText(_muda->text());
 
                 //when enter is pressed change the model
-                _edit->keyWentDown().connect(
-                    (bind(&muda_widget::text_changed, this)));
-                _edit->enterPressed().connect
-                    (bind(&muda_widget::change_text, this));
+                _edit->keyWentDown().connect(this, &muda_widget::text_changed);
+                _edit->enterPressed().connect(this, &muda_widget::change_text);
 
                 //when the model changes the text or type
                 _when_text_changes = _muda.modify()->when_text_changes(
@@ -106,16 +98,14 @@ namespace mempko
                 _delete_button = new w::WLabel{"&#10060;"};
                 _delete_button->setStyleClass("btn muda-delete");
                 _delete_button->setToolTip("erase");
-                _delete_button->doubleClicked().connect
-                    (bind(&muda_widget::delete_pressed, this));
+                _delete_button->doubleClicked().connect(this, &muda_widget::delete_pressed);
 
                 //type button
                 _date = new w::WLabel{""};
                 _type = new w::WLabel{"now"};
-                _type->clicked().connect
-                    (bind(&muda_widget::type_pressed, this));
+                _type->clicked().connect(this, &muda_widget::type_pressed);
                 update_type();
-                hide_buttons();
+                show_buttons();
 
                 //layout
                 _layout = new w::WHBoxLayout();
@@ -127,14 +117,9 @@ namespace mempko
                 _layout->addWidget(_delete_button);
                 _layout->setContentsMargins(0,0,0,0);
 
-                _root->setLayout(_layout);
-                _root->setStyleClass("muda-container");
-                _root->resize(w::WLength(100, w::WLength::Percentage), w::WLength::Auto);
-
-                _root->mouseWentOver().connect
-                    (bind(&muda_widget::show_buttons, this));
-                _root->mouseWentOut().connect
-                    (bind(&muda_widget::hide_buttons, this));
+                setLayout(_layout);
+                setStyleClass("muda-container");
+                resize(w::WLength(100, w::WLength::Percentage), w::WLength::Auto);
 
                 ENSURE(_edit);
                 ENSURE(_layout);
@@ -187,24 +172,17 @@ namespace mempko
 
             void muda_widget::show_buttons()
             {
-                INVARIANT(_delete_button);
-                INVARIANT(_type);
-                INVARIANT(_date);
-
-                _date->setHidden(false);
-                _delete_button->setHidden(false);
-                _type->setHidden(false);
+                _date->show();
+                _delete_button->show();
+                _type->show();
             }
 
             void muda_widget::hide_buttons()
             {
-                INVARIANT(_delete_button);
-                INVARIANT(_type);
-                INVARIANT(_date);
+                _date->hide();
+                _delete_button->hide();
+                _type->hide();
 
-                _date->setHidden(true);
-                _delete_button->setHidden(true);
-                _type->setHidden(true);
             }
 
             void muda_widget::delete_pressed()

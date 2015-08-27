@@ -100,6 +100,13 @@
 	width: 1em;
 	padding: 0px;
 }
+.muda-delete {
+	background-color:#8A0808;
+	font-family:entypo;
+    font-size: 1.5em;
+	width: 1em;
+	padding: 0px;
+}
 
 .muda-all-button {
 	background-color:#084B8A;
@@ -111,18 +118,22 @@
 
 .muda-now-button {
 	background-color:#088A08;
+	width: 3em;
 }
 
 .muda-later-button {
 	background-color:#868A08;
+	width: 3em;
 }
 
 .muda-done-button {
 	background-color:#2E2E2E;
+	width: 3em;
 }
 
 .muda-note-button {
 	background-color:#A4A4A4;
+	width: 3em;
 }
 
 .muda-settings-button {
@@ -142,6 +153,7 @@
 .timestamp {
     color: grey;
     font-size: 0.8em;
+	width: 9em;
 }
 
 .Wt-auth-logged-in {
