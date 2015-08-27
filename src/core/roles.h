@@ -123,6 +123,20 @@ namespace mempko { namespace muda { namespace role {
                 virtual ~removable_container(){}
         };
 
+    template<class object_ptr, class id>
+        struct id_is
+        {
+            id_is(id v) : _v(v) {}
+            bool operator()(object_ptr obj) 
+            { 
+                bool remove = obj->id() == _v; 
+                if(remove) removed_obj = obj;
+                return remove;
+            }
+            id _v;
+            object_ptr removed_obj;
+        };
+
     template<class container, class object_ptr, class id>
         class removable_container_and_notifier : public removable_container<id>
         {
@@ -130,20 +144,7 @@ namespace mempko { namespace muda { namespace role {
             public:
                 virtual bool remove(id v)
                 {
-                    struct id_is
-                    {
-                        id_is(id v) : _v(v) {}
-                        bool operator()(object_ptr obj) 
-                        { 
-                            bool remove = obj->id() == _v; 
-                            if(remove) removed_obj = obj;
-                            return remove;
-                        }
-                        id _v;
-                        object_ptr removed_obj;
-
-                    };
-                    id_is pred(v);
+                    id_is<object_ptr, id> pred(v);
                     self()->list().remove_if(pred);
                     if(pred.removed_obj) _sig(pred.removed_obj);
                     return pred.removed_obj;
@@ -239,3 +240,5 @@ namespace mempko { namespace muda { namespace role {
 }}} //namespace
 
 #endif
+
+
