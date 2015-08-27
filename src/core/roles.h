@@ -280,10 +280,12 @@ namespace mempko
 
                         switch(initial_state)
                         {
-                            case LATER: self()->now(); break;
-                            case NOW: self()->done(); break;
+                            case NOW: self()->later(); break;
+                            case LATER: self()->done(); break;
                             case DONE: self()->note(); break;
-                            case NOTE: self()->later(); break;
+                            case NOTE: self()->now(); break;
+                            default:
+                                CHECK(false && "missed case");
                         }
                         self()->stamp_modified();
                         this->signal();
