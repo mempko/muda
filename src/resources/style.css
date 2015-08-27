@@ -1,3 +1,15 @@
+
+.login-header {
+	background-repeat:repeat-x;
+	background: url(images/background.png) repeat-x left top;
+    text-align: center;
+    height: 250px;
+    font-size: 15em;
+	color: #b8ddff;
+    text-shadow: 1px 1px 10px #000;
+	font-family:tahoma, arial, sans-serif;
+}
+
 .new-muda {
     border: 2px dashed #D1C7AC;
 	margin-bottom:4px;
@@ -60,7 +72,7 @@
 .btn {
 	float: left;
 	height: 20px;
-	background: url(resource/images/btn_stretch.png) repeat-x left top;
+	background: url(images/btn_stretch.png) repeat-x left top;
 	padding: 3px;
 	color: #fff;
 	font-size: 1em;

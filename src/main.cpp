@@ -100,6 +100,8 @@ class app : public WApplication
         optional_regex _search;
         optional_regex _set_search;
         m::text_type _user_name = "unknown";
+        m::text_type _user_email = "unknown";
+        wo::AuthWidget* _authw = nullptr;
         connections _connections;
 
     private:
@@ -141,18 +143,18 @@ void app::login_screen()
     auth_model->addPasswordAuth(&mt::session::password_auth());
     auth_model->addOAuth(mt::session::oauth());
 
-    auto auth_w = new wo::AuthWidget{_session->login()};
-    auth_w->setModel(auth_model);
-    auth_w->setRegistrationEnabled(true);
-    auth_w->processEnvironment();
+    _authw = new wo::AuthWidget{_session->login()};
+    _authw->setModel(auth_model);
+    _authw->setRegistrationEnabled(true);
+    _authw->processEnvironment();
 
     _stack = new WStackedWidget;
 
     /////////////////////////////////////////
 
-    root()->addWidget(new WText{"<h1>Muda List</h1>"});
+    root()->addWidget(new WText{"<div class='login-header'>Muda</div>"});
 
-    root()->addWidget(auth_w);
+    root()->addWidget(_authw);
     root()->addWidget(_stack);
 }
 
@@ -160,16 +162,16 @@ void app::oauth_event()
 {
     INVARIANT(_session);
 
-    if(_session->login().loggedIn())
-    {
-        startup_muda_screen();
-    }
+    if(_session->login().loggedIn()) startup_muda_screen();
+    else login_screen();
 }
 
 void app::startup_muda_screen()
 {
     INVARIANT(_session);
     _user_name = _session->user_name();
+    _user_email = _session->email();
+    std::cout << "EMAIL: " << _user_email << std::endl;
 
     setTitle(_user_name);
     load_user();
@@ -619,6 +621,8 @@ WApplication *create_application(const WEnvironment& env)
 
     a->useStyleSheet("resources/style.css");
     a->setTitle("Muda");                               
+    a->messageResourceBundle().use(a->appRoot() + "templates");
+
     return a;
 }
 

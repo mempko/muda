@@ -66,6 +66,7 @@ namespace mempko
 
                     //current user
                     std::string user_name() const;
+                    std::string email() const;
 
                     static const Wt::Auth::AuthService& auth();
                     static const Wt::Auth::AbstractPasswordService& password_auth();

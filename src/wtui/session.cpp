@@ -85,9 +85,8 @@ namespace mempko
 
             model::user_dptr session::user() const
             {
+                REQUIRE(_login.loggedIn());
                 INVARIANT(_users);
-
-                if(!_login.loggedIn()) return {};
 
                 auto auth = _users->find(_login.user());
                 CHECK(auth);
@@ -103,8 +102,14 @@ namespace mempko
 
             std::string session::user_name() const
             {
-                return _login.loggedIn() ? 
-                    _login.user().identity(wo::Identity::LoginName).toUTF8() : std::string{};
+                REQUIRE(_login.loggedIn());
+                return _login.user().identity(wo::Identity::LoginName).toUTF8();
+            }
+
+            std::string session::email() const
+            {
+                REQUIRE(_login.loggedIn());
+                return _login.user().email();
             }
 
             wo::AbstractUserDatabase& session::users()
