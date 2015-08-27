@@ -26,6 +26,7 @@ namespace mempko { namespace muda { namespace role {
                 virtual void change(const text_type& text) 
                 {
                     self()->text(text);
+                    self()->stamp_modified();
                     BOOST_ASSERT(self()->text() == text);
                     _sig();
                 }
@@ -180,6 +181,7 @@ namespace mempko { namespace muda { namespace role {
                     case NOTE: self()->later(); break;
                 }
                 BOOST_ASSERT(initial_state != self()->state());
+                self()->stamp_modified();
                 _sig();
             }
         public:
@@ -192,8 +194,48 @@ namespace mempko { namespace muda { namespace role {
             sig _sig;
     };
 
+    template<class type>
+        class time_stampable_when_created
+        {
+            public:
+                virtual void stamp() = 0;
+        };
+
+    template <class type>
+        class ptime_stampable_when_created : public time_stampable_when_created<type>
+        {
+            ADD_SELF(type)
+            public:
+                virtual void stamp()
+                {
+                    using namespace boost::gregorian;
+                    using namespace boost::posix_time;
+                    ptime now = second_clock::local_time();
+                    self()->created(now);
+                }
+        };
+
+    template<class type>
+        class time_stampable_when_modified
+        {
+            public:
+                virtual void stamp_modified() = 0;
+        };
+
+    template <class type>
+        class ptime_stampable_when_modified : public time_stampable_when_modified<type>
+        {
+            ADD_SELF(type)
+            public:
+                virtual void stamp_modified()
+                {
+                    using namespace boost::posix_time;
+                    using namespace boost::gregorian;
+                    time now = second_clock::local_time();
+                    self()->modified(now);
+                }
+        };
+
 }}} //namespace
 
 #endif
-
-
