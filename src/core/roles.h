@@ -10,15 +10,15 @@
 
 namespace mempko { namespace muda { namespace role {
 
-    template<class m>
-        class modifiable_text 
+    template<class m, class value>
+        class modifiable_object 
         {
             public:
-                virtual void change(const text_type&) = 0;
+                virtual void change(const value&) = 0;
         };
 
     template <class m>
-        class modifable_text_and_notify : public modifiable_text<m> 
+        class modifable_text_and_notify : public modifiable_object<m, text_type> 
         {
             ADD_SELF(m)
             public:
@@ -83,21 +83,21 @@ namespace mempko { namespace muda { namespace role {
                 virtual const_iterator end() const { return self()->end();} 
         };
 
-    template<class t>
-        class object_sink
+    template<class object>
+        class appendable_container
         {
             public:
-                virtual bool add(t& m) = 0;
+                virtual bool add(object& obj) = 0;
         };
 
-    template<class list_t, class t>
-        class appendable_object_sink_and_notifier : public object_sink<t>
+    template<class container, class object>
+        class appendable_container_and_notifier : public appendable_container<object>
         {
-            ADD_SELF(list_t)
+            ADD_SELF(container)
             public:
-                virtual bool add(t& object) 
+                virtual bool add(object& obj) 
                 {
-                    self()->list().push_back(object);
+                    self()->list().push_back(obj);
                     _sig();
                     return true;
                 }
@@ -105,6 +105,47 @@ namespace mempko { namespace muda { namespace role {
                 typedef boost::signals2::signal<void ()> sig;				
                 typedef typename sig::slot_type slot_type;
                 void when_object_added(const slot_type& slot) { _sig.connect(slot);}
+            private:
+                sig _sig;
+        };
+
+    template<class handle>
+        class removable_container
+        {
+            public:
+                virtual bool remove(handle m) = 0;
+        };
+
+    template<class container, class object_ptr, class id>
+        class removable_container_and_notifier : public removable_container<id>
+        {
+            ADD_SELF(container)
+            public:
+                virtual bool remove(id v)
+                {
+                    struct id_is
+                    {
+                        id_is(id v) : _v(v) {}
+                        bool operator()(object_ptr obj) 
+                        { 
+                            bool remove = obj->id() == _v; 
+                            if(remove) removed_obj = obj;
+                            return remove;
+                        }
+                        id _v;
+                        object_ptr removed_obj;
+
+                    };
+                    id_is pred(v);
+                    self()->list().remove_if(pred);
+                    if(pred.removed_obj) _sig(pred.removed_obj);
+                    return pred.removed_obj;
+                }
+
+            public:
+                typedef boost::signals2::signal<void (object_ptr)> sig;				
+                typedef typename sig::slot_type slot_type;
+                void when_object_removed(const slot_type& slot) { _sig.connect(slot);}
             private:
                 sig _sig;
         };

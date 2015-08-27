@@ -14,6 +14,7 @@ using namespace Wt;
 using boost::bind;
 using boost::mem_fn;
 
+namespace m = mempko::muda;
 namespace mm = mempko::muda::model;
 namespace mc = mempko::muda::context;
 namespace mt = mempko::muda::wt;
@@ -26,6 +27,7 @@ class app : public WApplication
         void create_ui();
         void add_muda_widget(mm::muda_ptr muda);
         void add_new_muda();
+        void remove_muda(m::id_type id, mt::muda_widget* widget);
         void save_mudas();
         void load_mudas();
     private:
@@ -99,16 +101,24 @@ void app::add_muda_widget(mm::muda_ptr muda)
     //create new muda widget and add it to widget list
     mt::muda_widget* new_widget = new mt::muda_widget(muda);
     
+    new_widget->when_delete_pressed(
+            bind(&app::remove_muda, this, _1, _2));
+
     if(_muda_widgets.empty()) root()->addWidget(new_widget);
     else root()->insertBefore(new_widget, _muda_widgets.back());
 
     _muda_widgets.push_back(new_widget);
 
     _new_muda->setText(L"");
+}
 
-    BOOST_ASSERT(_mudas.size() == _muda_widgets.size());
+void app::remove_muda(m::id_type id, mt::muda_widget* widget)
+{
+    mc::remove_muda remove(id, _mudas); remove();
 
-    std::cout << "total muda widgets: " << _muda_widgets.size() << std::endl;
+    _muda_widgets.remove(widget);
+    root()->removeWidget(widget);
+    save_mudas();
 }
 
 WApplication *create_application(const WEnvironment& env)

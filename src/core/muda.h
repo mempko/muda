@@ -50,7 +50,8 @@ namespace mempko { namespace muda { namespace model {
 
     class muda_list : 
         public role::iterable_with_list<muda_list, muda_ptr_list>,
-        public role::appendable_object_sink_and_notifier<muda_list,muda_ptr>
+        public role::appendable_container_and_notifier<muda_list,muda_ptr>,
+        public role::removable_container_and_notifier<muda_list, muda_ptr, id_type>
     {
         public:
             typedef muda_ptr_list list_type;
@@ -86,7 +87,8 @@ namespace mempko { namespace muda { namespace model {
                 }
     };
 
-    class text_value : public role::modifable_text_and_notify<text_value>
+    class text_value : 
+        public role::modifable_text_and_notify<text_value>
     {
         public:
             const text_type& text() const { return _text;}
@@ -137,6 +139,7 @@ namespace mempko { namespace muda { namespace model {
 namespace mempko { namespace muda { namespace context { 
     //useful typedefs
     typedef add_object<model::muda,model::muda_ptr,model::muda_list> add_muda;
+    typedef remove_object<model::muda_list, id_type> remove_muda;
     typedef modify_text_context<model::muda> modify_muda_text;
 
 }}}//namespace

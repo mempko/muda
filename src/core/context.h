@@ -12,7 +12,7 @@ namespace mempko { namespace muda { namespace context {
         class modify_text_context 
         {
             public:
-                modify_text_context(role::modifiable_text<m>& md, const text_type& text) : 
+                modify_text_context(role::modifiable_object<m, text_type>& md, const text_type& text) : 
                     _m(md), _text(text) {}
 
                 void operator()()
@@ -20,7 +20,7 @@ namespace mempko { namespace muda { namespace context {
                     _m.change(_text);
                 }
             private:
-                role::modifiable_text<m>& _m;
+                role::modifiable_object<m, text_type>& _m;
                 text_type _text;
         };
 
@@ -67,7 +67,7 @@ namespace mempko { namespace muda { namespace context {
             {
                 typedef typename list::list_type list_type;
                 set_incremental_id<m, list_type> set_id(*_m, _list);
-                role::object_sink<m_ptr>* sink = &_list;
+                role::appendable_container<m_ptr>* sink = &_list;
                 BOOST_ASSERT(sink);
 
                 set_id();
@@ -77,6 +77,24 @@ namespace mempko { namespace muda { namespace context {
             private:
             m_ptr _m;
             list& _list;
+        };
+
+    template<class container, class id>
+        class remove_object
+        {
+            public:
+                remove_object(
+                        id v, 
+                        role::removable_container<id>& removable) :
+                    _id(v), _removable(removable) {}
+                void operator()()
+                {
+                    bool removed = _removable.remove(_id);
+                    BOOST_ASSERT(removed);
+                }
+            private:
+                id _id;
+                role::removable_container<id>& _removable;
         };
 
 }}}//namespace

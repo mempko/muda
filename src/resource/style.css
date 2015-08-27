@@ -1,6 +1,15 @@
 .new-muda {
     border: 2px dashed #D1C7AC;
 	margin-bottom:4px;
+	padding:2px;
+}
+
+.muda-container {
+	margin-bottom:4px;
+}
+
+.muda-delete {
+    height:20px;
 }
 
 .muda {
@@ -8,9 +17,9 @@
 	background-repeat:repeat-x;
 	border:1px solid #d1c7ac;
 	color:#333333;
+    height:20px;
 	padding:3px;
-	margin-right:4px;
-	margin-bottom:4px;
+	margin-right:0px;
 	font-family:tahoma, arial, sans-serif;
 }
 
