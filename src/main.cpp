@@ -682,7 +682,7 @@ WApplication *create_application(const WEnvironment& env)
 
     a->useStyleSheet("resources/style.css");
     a->setTitle("Muda");                               
-    a->messageResourceBundle().use(a->appRoot() + "templates");
+    a->messageResourceBundle().use(a->appRoot() + "/templates");
 
     return a;
 }
