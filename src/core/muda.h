@@ -37,6 +37,7 @@
 #include <Wt/Dbo/WtSqlTraits>
 #include <Wt/Auth/Dbo/AuthInfo>
 
+
 namespace dbo = Wt::Dbo;
 #define LOCK boost::mutex::scoped_lock lll(this->mutex())
 
@@ -145,6 +146,9 @@ namespace mempko
             using muda_dptr = dbo::ptr<muda>;
             using muda_ptr_list = dbo::collection<muda_dptr>;
 
+            class user;
+            using user_dptr = dbo::ptr<user>;
+
             class muda_list : 
                 public role::lockable,
                 public role::iterable_with_list<muda_list, muda_ptr_list>,
@@ -184,9 +188,12 @@ namespace mempko
                         }
                     }
 
+                    user_dptr user() const;
+
                 private:
                     list_type _list;
                     text_type _name;
+                    user_dptr _user;
 
                 public:
                     template<class Action>
@@ -194,24 +201,47 @@ namespace mempko
                         {
                             dbo::field(a, _name, "name");
                             dbo::hasMany(a, _list, dbo::ManyToOne, "list");
+                            dbo::belongsTo(a, _user, "mlist");
                         }
             };
 
             using muda_list_dptr = dbo::ptr<muda_list>;
+            using muda_list_dptrs = dbo::collection<muda_list_dptr>;
 
-            class user
+            using auth_info = Wt::Auth::Dbo::AuthInfo<user>;
+            using auth_info_dptr = dbo::ptr<auth_info>;
+            using auth_infos = dbo::collection<auth_info_dptr>;
+            using users = dbo::collection<user_dptr>;
+
+            class user : public dbo::Dbo<user>
             {
                 public:
                     const text_type& name() const { return _name;}
                     text_type& name() { return _name;}
 
-                    const text_type& email() const { return _email;}
-                    text_type& email() { return _email;}
+                    const muda_list_dptrs& lists() const { return _lists;}
+                    muda_list_dptrs& lists() { return _lists;}
+
+                    const auth_infos& auths() const { return _auth_infos;}
+                    auth_infos& auths() { return _auth_infos;}
 
                 private:
                     text_type _name;
                     text_type _email;
+                    muda_list_dptrs _lists;
+                    auth_infos _auth_infos;
+
+                public:
+                    template<class Action>
+                        void persist(Action& a)
+                        {
+                            dbo::field(a, _name, "name");
+                            dbo::hasMany(a, _lists, dbo::ManyToOne, "mlist");
+                            dbo::hasMany(a, _auth_infos, Wt::Dbo::ManyToOne, "user");
+                        }
             };
+
+            using user_dptr = dbo::ptr<user>;
 
 #undef LOCK
         }

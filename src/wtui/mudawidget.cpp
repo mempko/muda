@@ -115,6 +115,7 @@ namespace mempko
             {
                 INVARIANT(_muda);
                 INVARIANT(_edit);
+                dbo::Transaction t{_session};
 
                 auto modify_text = context::modify_muda_text{*(_muda.modify()), _edit->text().narrow()};
                 modify_text();

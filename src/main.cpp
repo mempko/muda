@@ -17,6 +17,7 @@
 
 #include <fstream>
 #include <functional>
+#include <memory>
 
 #include <Wt/WApplication>
 #include <Wt/WBreak>
@@ -25,7 +26,9 @@
 #include <Wt/WLineEdit>
 #include <Wt/WPushButton>
 #include <Wt/WText>
-#include <Wt/Dbo/backend/Postgres>
+#include <Wt/Auth/AuthModel>
+#include <Wt/Auth/AuthWidget>
+#include <Wt/WServer>
 
 #include <boost/optional.hpp>
 #include <boost/regex.hpp>
@@ -33,6 +36,7 @@
 #include "core/muda.h"
 #include "core/context.h"
 #include "wtui/mudalistwidget.h"
+#include "wtui/session.h"
 
 using namespace Wt;
 namespace ph = std::placeholders;
@@ -42,17 +46,16 @@ namespace mm = mempko::muda::model;
 namespace mc = mempko::muda::context;
 namespace mt = mempko::muda::wt;
 
-typedef std::list<boost::signals2::connection> connections;
-
-typedef boost::optional<boost::regex> optional_regex;
+using connections = std::list<boost::signals2::connection>;
+using optional_regex = boost::optional<boost::regex>;
 
 class app : public WApplication
 {
     public:
         app(const WEnvironment& env);
     private:
-        void connect();
         void login_screen();
+        void oauth_event();
         void startup_muda_screen();
         void setup_view();
         void create_header_ui();
@@ -88,39 +91,26 @@ class app : public WApplication
     private:
         void clear_connections();
         void save_mudas();
-        void load_mudas();
+        void load_user();
 
     private:
         //login widgets
-        WLineEdit* _muda_list_name_edit;
         optional_regex _search;
         optional_regex _set_search;
-        m::text_type _muda_list_name = "global";
+        m::text_type _user_name = "global";
         connections _connections;
 
     private:
         //muda widgets
         WLineEdit* _new_muda = nullptr;
-        dbo::backend::Postgres _con;
-        dbo::Session _session;
+        mt::session _session;
+        mm::user_dptr _user;
         mm::muda_list_dptr _mudas;
 };
 
 app::app(const WEnvironment& env) : WApplication{env}
 {
-    connect();
     login_screen();
-}
-
-void app::connect()
-{
-    std::string c = "host=localhost user=muda password=fluffybunny dbname=muda";
-    _con.connect(c);
-    _session.setConnection(_con);
-
-    _session.mapClass<mm::muda>("muda");
-    _session.mapClass<mm::muda_list>("muda_list");
-    //_session.createTables();
 }
 
 
@@ -129,28 +119,40 @@ void app::login_screen()
     INVARIANT(root());
 
     root()->clear();
+
+    _session.login().changed().connect(this, &app::oauth_event);
+
+    auto auth_model = new wo::AuthModel{mt::session::auth(), _session.users(), this};
+    auth_model->addPasswordAuth(&mt::session::password_auth());
+    auth_model->addOAuth(mt::session::oauth());
+
+    auto auth_w = new wo::AuthWidget{_session.login()};
+    auth_w->setModel(auth_model);
+    auth_w->setRegistrationEnabled(true);
+
+    /////////////////////////////////////////
+
     auto layout = new WHBoxLayout;
+    layout->addWidget(new WText{"<h1>Muda List</h1>"});
+    layout->addWidget(auth_w);
 
-    layout->addWidget(new WLabel{"Muda List:"}, 0, AlignMiddle);
-    layout->addWidget( _muda_list_name_edit = new WLineEdit{_muda_list_name}, 0, AlignMiddle);
-    _muda_list_name_edit->setFocus();
-    _muda_list_name_edit->setStyleClass("muda");
-
-    auto b = new WPushButton{"Load"};
-    layout->addWidget(b, 0, AlignMiddle);
-    layout->addStretch();
-
-    b->clicked().connect(std::bind(&app::startup_muda_screen, this));
-    _muda_list_name_edit->enterPressed().connect(std::bind(&app::startup_muda_screen, this));
     root()->setLayout(layout);
+}
+
+void app::oauth_event()
+{
+    if(_session.login().loggedIn())
+    {
+        startup_muda_screen();
+    }
 }
 
 void app::startup_muda_screen()
 {
-    _muda_list_name = _muda_list_name_edit->text().narrow();
+    _user_name = _session.user_name();
 
-    setTitle(_muda_list_name);
-    load_mudas();
+    setTitle(_user_name);
+    load_user();
     all_view();
 }
 
@@ -171,7 +173,7 @@ void app::all_view()
     setup_view();
 
     //create muda list widget
-    auto list_widget = new mt::muda_list_widget{_session, _mudas, 
+    auto list_widget = new mt::muda_list_widget{_session.dbs(), _mudas, 
             std::bind(&app::filter_by_all, this, ph::_1), root()};
 
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
@@ -188,11 +190,11 @@ void app::triage_view()
     setup_view();
 
     //create muda list widget
-    auto now = new mt::muda_list_widget{_session, _mudas, 
+    auto now = new mt::muda_list_widget{_session.dbs(), _mudas, 
             std::bind(&app::filter_by_now, this, ph::_1), root()};
-    auto later = new mt::muda_list_widget{_session, _mudas, 
+    auto later = new mt::muda_list_widget{_session.dbs(), _mudas, 
             std::bind(&app::filter_by_later, this, ph::_1), root()};
-    auto done = new mt::muda_list_widget{_session, _mudas, 
+    auto done = new mt::muda_list_widget{_session.dbs(), _mudas, 
             std::bind(&app::filter_by_done, this, ph::_1), root()};
 
     _connections.push_back(now->when_model_updated(std::bind(&app::save_mudas, this)));
@@ -211,7 +213,7 @@ void app::now_view()
     setup_view();
 
     //create muda list widget
-    auto list_widget = new mt::muda_list_widget{_session, _mudas, 
+    auto list_widget = new mt::muda_list_widget{_session.dbs(), _mudas, 
             std::bind(&app::filter_by_now, this, ph::_1), root()};
 
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
@@ -228,7 +230,7 @@ void app::later_view()
     setup_view();
 
     //create muda list widget
-    auto list_widget = new mt::muda_list_widget{_session, _mudas, 
+    auto list_widget = new mt::muda_list_widget{_session.dbs(), _mudas, 
             std::bind(&app::filter_by_later, this, ph::_1), root()};
 
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
@@ -243,7 +245,7 @@ void app::done_view()
     setup_view();
 
     //create muda list widget
-    auto list_widget = new mt::muda_list_widget{_session, _mudas, 
+    auto list_widget = new mt::muda_list_widget{_session.dbs(), _mudas, 
             std::bind(&app::filter_by_done, this, ph::_1), root()};
 
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
@@ -258,7 +260,7 @@ void app::note_view()
     setup_view();
 
     //create muda list widget
-    auto list_widget = new mt::muda_list_widget{_session, _mudas, 
+    auto list_widget = new mt::muda_list_widget{_session.dbs(), _mudas, 
             std::bind(&app::filter_by_note, this, ph::_1), root()};
 
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
@@ -279,19 +281,26 @@ void app::save_mudas()
     //_session.flush();
 }
 
-void app::load_mudas()
+void app::load_user()
 {
-    dbo::Transaction t{_session};
-    auto mudas = _session.find<mm::muda_list>().where("name = ?").bind(_muda_list_name);
-    if(mudas.resultValue())
-        _mudas = mudas;
-    else
+    dbo::Transaction t{_session.dbs()};
+
+    _user = _session.user();
+    if(!_user)
+        throw std::runtime_error{"no user with: " + _user_name};
+
+    CHECK(_user);
+
+    auto& lists = _user.modify()->lists();
+    if(lists.size() == 0)
     {
         auto ml = new mm::muda_list;
-        ml->name() = _muda_list_name;
-        _mudas = _session.add(ml);
+        ml->name() = "main";
+        auto list = _session.dbs().add(ml);
+        lists.insert(list);
     }
 
+    _mudas = lists.front();
 }
 
 WLabel* create_menu_label(WString text, WString css_class)
@@ -380,7 +389,7 @@ try
     INVARIANT_GREATER(_new_muda->text().value().size(), 0);
 
     std::string anyChar{".*"};
-    std::string search = _new_muda->text().narrow().substr(1);
+    std::string search = _new_muda->text().toUTF8().substr(1);
     std::string regex = anyChar + search + anyChar;
 
     boost::regex e{regex};
@@ -445,12 +454,12 @@ mm::muda_dptr app::add_new_muda()
     INVARIANT(_new_muda);
 
     //create new muda and add it to muda list
-    auto muda = _session.add(new mm::muda);
+    auto muda = _session.dbs().add(new mm::muda);
 
     mc::add_muda add{muda, *(_mudas.modify())};
     add();
 
-    mc::modify_muda_text modify_text{*(muda.modify()), _new_muda->text().narrow()};
+    mc::modify_muda_text modify_text{*(muda.modify()), _new_muda->text().toUTF8()};
     modify_text();
 
     ENSURE(muda);
@@ -474,7 +483,7 @@ void app::add_new_all_muda(mt::muda_list_widget* mudas)
 {
     REQUIRE(mudas);
     INVARIANT(_new_muda);
-    dbo::Transaction t{_session};
+    dbo::Transaction t{_session.dbs()};
 
     if(do_search()) {all_view();return;}
 
@@ -487,7 +496,7 @@ void app::add_new_triage_muda(mt::muda_list_widget* mudas)
 {
     REQUIRE(mudas);
     INVARIANT(_new_muda);
-    dbo::Transaction t{_session};
+    dbo::Transaction t{_session.dbs()};
 
     if(do_search()) {triage_view();return;}
 
@@ -500,7 +509,7 @@ void app::add_new_now_muda(mt::muda_list_widget* mudas)
 {
     REQUIRE(mudas);
     INVARIANT(_new_muda);
-    dbo::Transaction t{_session};
+    dbo::Transaction t{_session.dbs()};
 
     if(do_search()) {now_view();return;}
 
@@ -513,7 +522,7 @@ void app::add_new_later_muda(mt::muda_list_widget* mudas)
 {
     REQUIRE(mudas);
     INVARIANT(_new_muda);
-    dbo::Transaction t{_session};
+    dbo::Transaction t{_session.dbs()};
 
     if(do_search()) {later_view();return;}
 
@@ -526,7 +535,7 @@ void app::add_new_done_muda(mt::muda_list_widget* mudas)
 {
     REQUIRE(mudas);
     INVARIANT(_new_muda);
-    dbo::Transaction t{_session};
+    dbo::Transaction t{_session.dbs()};
 
     if(do_search()) {done_view();return;}
 
@@ -539,7 +548,7 @@ void app::add_new_note_muda(mt::muda_list_widget* mudas)
 {
     REQUIRE(mudas);
     INVARIANT(_new_muda);
-    dbo::Transaction t{_session};
+    dbo::Transaction t{_session.dbs()};
 
     if(do_search()) {note_view();return;}
 
@@ -569,7 +578,30 @@ WApplication *create_application(const WEnvironment& env)
 }
 
 int main(int argc, char **argv)
+try 
 {
-    return WRun(argc, argv, &create_application);
+    Wt::WServer server{argv[0]};
+
+    server.setServerConfiguration(argc, argv, WTHTTP_CONFIGURATION);
+    server.addEntryPoint(Wt::Application, create_application);
+
+    mt::session::configure_auth();
+
+    if (server.start()) 
+    {
+        Wt::WServer::waitForShutdown();
+        server.stop();
+    }
+    return 0;
+} 
+catch (Wt::WServer::Exception& e) 
+{
+    std::cerr << e.what() << std::endl;
+    return 1;
+} 
+catch (std::exception &e) 
+{
+    std::cerr << "exception: " << e.what() << std::endl;
+    return 1;
 }
 
