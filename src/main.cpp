@@ -9,7 +9,7 @@
 
 #include "core/muda.h"
 #include "core/context.h"
-#include "wtui/mudawidget.h"
+#include "wtui/mudalistwidget.h"
 
 using namespace Wt;
 using boost::bind;
@@ -28,11 +28,10 @@ class app : public WApplication
         void login_screen();
         void muda_screen();
         void create_mudas_ui();
-        void add_muda_widget(mm::muda_ptr muda);
         void add_new_muda();
-        void remove_muda(m::id_type id, mt::muda_widget* widget);
         void save_mudas();
         void load_mudas();
+        bool filter();
     private:
         //login widgets
         WLineEdit* _muda_file_edit;
@@ -41,7 +40,7 @@ class app : public WApplication
         //muda widgets
         WLineEdit* _new_muda;
         mm::muda_list _mudas;
-        mt::muda_widget_list _muda_widgets;
+        mt::muda_list_widget* _muda_list_widget;
 };
 
 app::app(const WEnvironment& env) : 
@@ -75,8 +74,8 @@ void app::muda_screen()
     _muda_file = _muda_file_edit->text().narrow();
     setTitle(_muda_file);
     root()->clear();
-    create_mudas_ui();
     load_mudas();
+    create_mudas_ui();
 }
 
 void app::save_mudas()
@@ -94,10 +93,6 @@ void app::load_mudas()
     boost::archive::xml_iarchive ia(i);
 
     ia >> BOOST_SERIALIZATION_NVP(_mudas);
-
-    //create a widget for each muda
-    std::for_each(_mudas.begin(), _mudas.end(),
-            bind(mem_fn(&app::add_muda_widget), this, _1));
 }
 
 void app::create_mudas_ui()
@@ -109,6 +104,15 @@ void app::create_mudas_ui()
     //add muda when enter is pressed
     _new_muda->enterPressed().connect
         (bind(&app::add_new_muda, this));
+
+    //create muda list widget
+    _muda_list_widget = new mt::muda_list_widget(_mudas, bind(&app::filter, this), root());
+    _muda_list_widget->when_model_updated(bind(&app::save_mudas, this));
+}
+
+bool app::filter()
+{
+    return true;
 }
 
 void app::add_new_muda()
@@ -124,37 +128,10 @@ void app::add_new_muda()
     mc::add_muda add(muda, _mudas);
     add();
 
-    add_muda_widget(muda);
-    std::cout << "total mudas: " << _mudas.size() << std::endl;
-    save_mudas();
-}
-
-void app::add_muda_widget(mm::muda_ptr muda)
-{
-    BOOST_ASSERT(muda);
-
-    muda->when_text_changes(bind(&app::save_mudas, this));
-
-    //create new muda widget and add it to widget list
-    mt::muda_widget* new_widget = new mt::muda_widget(muda);
-    
-    new_widget->when_delete_pressed(bind(&app::remove_muda, this, _1, _2));
-    new_widget->when_type_pressed(bind(&app::save_mudas, this));
-
-    if(_muda_widgets.empty()) root()->addWidget(new_widget);
-    else root()->insertBefore(new_widget, _muda_widgets.back());
-
-    _muda_widgets.push_back(new_widget);
-
+    _muda_list_widget->add_muda(muda);
     _new_muda->setText(L"");
-}
 
-void app::remove_muda(m::id_type id, mt::muda_widget* widget)
-{
-    mc::remove_muda remove(id, _mudas); remove();
-
-    _muda_widgets.remove(widget);
-    root()->removeWidget(widget);
+    std::cout << "total mudas: " << _mudas.size() << std::endl;
     save_mudas();
 }
 
