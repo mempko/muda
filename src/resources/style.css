@@ -87,16 +87,17 @@
 	height: 20px;
 	background: url(images/btn_stretch.png) repeat-x left top;
 	padding: 3px;
-	color:#333333;
-	font-size: 1em;
-	text-decoration: none;
+	color:black;
+	font-size: 5em;
     text-align: center;
-    text-shadow: 1px 1px 5px #000;
 }
 
 .muda-delete {
 	background-color:#8A0808;
 	font-family:entypo;
+    font-size: 1.5em;
+	width: 1em;
+	padding: 0px;
 }
 .muda-all-button {
 	background-color:#084B8A;
@@ -122,10 +123,15 @@
 .muda-settings-button {
 	background-repeat:repeat-x;
 	border:1px solid #d1c7ac;
-	padding:3px;
+	padding:0px;
 	font-family:entypo;
-    font-size: 15px;
+    font-size: 1.6em;
 	background-color:white;
+	width: 2em;
+}
+
+.dirty {
+    color: red;
 }
 
 

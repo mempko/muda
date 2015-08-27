@@ -72,7 +72,6 @@ class app : public WApplication
         void startup_muda_screen();
         void setup_view();
         void create_header_ui();
-        void all_view();
         void triage_view();
         void now_view();
         void later_view();
@@ -82,7 +81,6 @@ class app : public WApplication
 
     private:
         bool do_search();
-        void add_new_all_muda(mt::muda_list_widget* mudas);
         void add_new_triage_muda(mt::muda_list_widget* mudas);
         void add_new_now_muda(mt::muda_list_widget* mudas);
         void add_new_later_muda(mt::muda_list_widget* mudas);
@@ -93,7 +91,6 @@ class app : public WApplication
 
     private:
         bool filter_by_search(mm::muda_dptr muda);
-        bool filter_by_all(mm::muda_dptr muda);
         bool filter_by_now(mm::muda_dptr muda);
         bool filter_by_later(mm::muda_dptr muda);
         bool filter_by_done(mm::muda_dptr muda);
@@ -195,7 +192,7 @@ void app::startup_muda_screen()
 
     setTitle(_user_name);
     load_user();
-    all_view();
+    triage_view();
 }
 
 void app::setup_view()
@@ -208,22 +205,6 @@ void app::setup_view()
 
     _search = _set_search ? _set_search : optional_regex();
     _set_search = optional_regex();
-}
-
-void app::all_view()
-{
-    INVARIANT(_session);
-    setup_view();
-
-    //create muda list widget
-    auto list_widget = new mt::muda_list_widget{_session->dbs(), _mudas, 
-            std::bind(&app::filter_by_all, this, ph::_1), root()};
-
-    _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
-
-    //add muda when enter is pressed
-    _new_muda->enterPressed().connect(
-            std::bind(&app::add_new_all_muda, this, list_widget));
 }
 
 void app::triage_view()
@@ -354,7 +335,6 @@ WLabel* create_small_label(WString text, WString css_class)
 {
     WLabel* l = new WLabel{text};
     l->setStyleClass(css_class);
-    l->resize(WLength(20, WLength::FontEm), WLength::Auto);
 
     ENSURE(l);
     return l;
@@ -372,9 +352,7 @@ WLabel* create_menu_label(WString text, WString css_class)
 
 WContainerWidget* app::create_menu()
 {
-    auto all = create_menu_label("all", "btn muda-all-button");
-    all->clicked().connect (std::bind(&app::all_view, this));
-
+    //setup menu
     auto triage = create_menu_label("prioritize", "btn muda-pri-button");
     triage->clicked().connect (std::bind(&app::triage_view, this));
 
@@ -390,10 +368,6 @@ WContainerWidget* app::create_menu()
     auto note = create_menu_label("note", "btn muda-note-button");
     note->clicked().connect (std::bind(&app::note_view, this));
 
-    auto settings = create_small_label("&#9881;", "sbtn muda-settings-button");
-    settings->setToolTip("settings");
-    auto logout = create_small_label("&#10060;", "sbtn muda-settings-button");
-    logout->setToolTip("logout");
 
     std::vector<WLabel*> menu = { all, triage, now, later, done, note, settings, logout};
 
@@ -406,7 +380,19 @@ WContainerWidget* app::create_menu()
     {
         layout->addWidget(m);
         layout->setStretchFactor(m, 1);
-        if(m != settings) layout->addSpacing(WLength(8, WLength::Pixel));
+        layout->addSpacing(WLength(8, WLength::Pixel));
+    }
+
+    //setup settings buttons
+    auto settings = create_small_label("&#128100;", "sbtn muda-settings-button");
+    settings->setToolTip("settings");
+    auto logout = create_small_label("&#59201;", "sbtn muda-settings-button");
+    logout->setToolTip("logout");
+
+    std::vector<WLabel*> small_menu = { settings, logout};
+    for(auto m : small_menu)
+    {
+        layout->addWidget(m);
     }
 
     layout->setContentsMargins(0,0,0,0);
@@ -421,9 +407,6 @@ WContainerWidget* app::create_menu()
 void app::create_header_ui()
 {
     INVARIANT(root());
-
-    auto entypo = new WText{"<link rel='stylesheet' href='/resources/fonts/entypo.css'>", Wt::XHTMLUnsafeText};
-    root()->addWidget(entypo);
 
     auto menu = create_menu();
 
@@ -481,12 +464,6 @@ try
 catch(...)
 {
     return false;
-}
-
-bool app::filter_by_all(mm::muda_dptr muda)
-{
-    REQUIRE(muda);
-    return filter_by_search(muda);
 }
 
 bool app::filter_by_now(mm::muda_dptr muda)
@@ -590,21 +567,6 @@ bool app::do_search()
     return _new_muda->text().value().size() == 0;
 }
 
-void app::add_new_all_muda(mt::muda_list_widget* mudas)
-{
-    REQUIRE(mudas);
-    INVARIANT(_new_muda);
-    INVARIANT(_session);
-
-    dbo::Transaction t{_session->dbs()};
-
-    if(do_search()) {all_view();return;}
-
-    auto muda = add_new_muda();
-    muda.modify()->type().now();
-    add_muda_to_list_widget(muda, mudas);
-}
-
 void app::add_new_triage_muda(mt::muda_list_widget* mudas)
 {
     REQUIRE(mudas);
@@ -697,6 +659,7 @@ WApplication *create_application(const WEnvironment& env)
     auto a = new app{env};
 
     a->useStyleSheet("resources/style.css");
+    a->useStyleSheet("resources/fonts/entypo.css");
     a->setTitle("Muda");                               
     a->messageResourceBundle().use(a->appRoot() + "/templates");
 
