@@ -18,6 +18,8 @@
 #include "wtui/mudawidget.h"
 #include "core/dbc.h"
 
+#include <Wt/WLength>
+
 namespace mempko 
 { 
     namespace muda 
@@ -65,6 +67,8 @@ namespace mempko
                 _edit->setText(_muda->text());
 
                 //when enter is pressed change the model
+                _edit->keyWentDown().connect(
+                    (bind(&muda_widget::text_changed, this)));
                 _edit->enterPressed().connect
                     (bind(&muda_widget::change_text, this));
 
@@ -75,9 +79,10 @@ namespace mempko
                         bind(&muda_widget::update_type, this));
 
                 //delete button
-                _deleteButton = new w::WLabel{"&#10060;"};
-                _deleteButton->setStyleClass("btn muda-delete");
-                _deleteButton->doubleClicked().connect
+                _delete_button = new w::WLabel{"&#10060;"};
+                _delete_button->setStyleClass("btn muda-delete");
+                _delete_button->setToolTip("erase");
+                _delete_button->doubleClicked().connect
                     (bind(&muda_widget::delete_pressed, this));
 
                 //type button
@@ -89,11 +94,11 @@ namespace mempko
 
                 //layout
                 _layout = new w::WHBoxLayout();
-                _layout->setSpacing(5);
+                _layout->setSpacing(8);
                 _layout->addWidget(_edit);
                 _layout->setStretchFactor(_edit, 1);
                 _layout->addWidget(_type);
-                _layout->addWidget(_deleteButton);
+                _layout->addWidget(_delete_button);
                 _layout->setContentsMargins(0,0,0,0);
 
                 _root->setLayout(_layout);
@@ -107,18 +112,42 @@ namespace mempko
 
                 ENSURE(_edit);
                 ENSURE(_layout);
-                ENSURE(_deleteButton);
+                ENSURE(_delete_button);
                 ENSURE(_type);
+            }
+
+            void muda_widget::text_changed()
+            {
+                INVARIANT(_muda);
+                INVARIANT(_edit);
+                if(_dirty) return;
+                if(_enter) 
+                {
+                    _enter = false;
+                    return;
+                }
+
+                _dirty = true;
+                set_style();
             }
 
             void muda_widget::change_text()
             {
                 INVARIANT(_muda);
                 INVARIANT(_edit);
+
+                if(_dirty)
+                {
+                    _dirty = false;
+                    set_style();
+                }
+                _enter = true;
+
                 dbo::Transaction t{_session};
 
-                auto modify_text = context::modify_muda_text{*(_muda.modify()), _edit->text().narrow()};
+                auto modify_text = context::modify_muda_text{*(_muda.modify()), _edit->text().toUTF8()};
                 modify_text();
+
             }
 
             void muda_widget::update_text()
@@ -130,19 +159,19 @@ namespace mempko
 
             void muda_widget::show_buttons()
             {
-                INVARIANT(_deleteButton);
+                INVARIANT(_delete_button);
                 INVARIANT(_type);
 
-                _deleteButton->setHidden(false);
+                _delete_button->setHidden(false);
                 _type->setHidden(false);
             }
 
             void muda_widget::hide_buttons()
             {
-                INVARIANT(_deleteButton);
+                INVARIANT(_delete_button);
                 INVARIANT(_type);
 
-                _deleteButton->setHidden(true);
+                _delete_button->setHidden(true);
                 _type->setHidden(true);
             }
 
@@ -174,6 +203,43 @@ namespace mempko
                 _type_sig();
             }
 
+            void muda_widget::set_style()
+            {
+                INVARIANT(_muda);
+                INVARIANT(_type);
+
+                switch(_muda->type().state())
+                {
+                    case NOW: 
+                        _type->setStyleClass("btn muda-now-button");
+
+                        if(_dirty) _edit->setStyleClass("dirty muda-now");
+                        else  _edit->setStyleClass("muda-now");
+
+                        break;
+                    case LATER: 
+                        _type->setStyleClass("btn muda-later-button");
+
+                        if(_dirty) _edit->setStyleClass("dirty muda-later");
+                        else _edit->setStyleClass("muda-later");
+
+                        break;
+                    case DONE: 
+                        _type->setStyleClass("btn muda-done-button");
+
+                        if(_dirty) _edit->setStyleClass("dirty muda-done");
+                        else _edit->setStyleClass("muda-done");
+
+                        break;
+                    case NOTE: 
+                        _type->setStyleClass("btn muda-note-button");
+
+                        if(_dirty) _edit->setStyleClass("dirty muda-note");
+                        else _edit->setStyleClass("muda-note");
+                        break;
+                }
+            }
+
             void muda_widget::update_type()
             {
                 INVARIANT(_muda);
@@ -183,25 +249,19 @@ namespace mempko
                 {
                     case NOW: 
                         _type->setText("now");
-                        _type->setStyleClass("btn muda-now-button");
-                        _edit->setStyleClass("muda-now");
                         break;
                     case LATER: 
                         _type->setText("later");
-                        _type->setStyleClass("btn muda-later-button");
-                        _edit->setStyleClass("muda-later");
                         break;
                     case DONE: 
                         _type->setText("done");
-                        _type->setStyleClass("btn muda-done-button");
-                        _edit->setStyleClass("muda-done");
                         break;
                     case NOTE: 
                         _type->setText("note");
-                        _type->setStyleClass("btn muda-note-button");
-                        _edit->setStyleClass("muda-note");
                         break;
                 }
+
+                set_style();
             }
         }
     }

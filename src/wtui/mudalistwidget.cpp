@@ -92,6 +92,7 @@ namespace mempko
                 remove();
 
                 fire_update_sig();
+                
                 _muda_widgets.remove(widget);
                 _root->removeWidget(widget);
             }

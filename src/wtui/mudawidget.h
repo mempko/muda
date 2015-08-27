@@ -60,12 +60,14 @@ namespace mempko
                 private:
                     void create_ui();
                     void change_text();
+                    void text_changed();
                     void update_text();
                     void show_buttons();
                     void hide_buttons();
                     void update_type();
                     void type_pressed();
                     void delete_pressed();
+                    void set_style();
 
                 private:
                     model::muda_dptr _muda;
@@ -74,11 +76,13 @@ namespace mempko
                     Wt::WContainerWidget* _root;
                     Wt::WHBoxLayout* _layout;
                     Wt::WLineEdit* _edit;
-                    Wt::WLabel* _deleteButton;
+                    Wt::WLabel* _delete_button;
                     Wt::WLabel* _type;
                     delete_sig _delete_sig;
                     type_sig _type_sig;
                     dbo::Session& _session;
+                    bool _dirty = false;
+                    bool _enter = false;
 
             };
 
