@@ -32,6 +32,9 @@
 #include <Wt/Auth/Dbo/AuthInfo>
 #include <Wt/Auth/Dbo/UserDatabase>
 
+#include <memory>
+#include <string>
+
 namespace wo = Wt::Auth;
 
 namespace mempko 
@@ -51,7 +54,7 @@ namespace mempko
                 public:
                     static void configure_auth();
 
-                    session();
+                    session(const std::string& db);
 
                     const dbo::Session& dbs() const { return _session;}
                     dbo::Session& dbs() { return _session;}
@@ -71,16 +74,17 @@ namespace mempko
                     model::user_dptr user() const;
 
                 private:
-                    void connect();
+                    void connect(const std::string& db);
 
                 private:
                     user_database_ptr _users;
                     wo::Login _login;
 
-
                     dbo::backend::Postgres _con;
                     mutable dbo::Session _session;
             };
+
+            using session_ptr = std::shared_ptr<session>;
         }
     }
 }

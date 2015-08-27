@@ -46,15 +46,14 @@ namespace mempko
                     oauth_services.push_back(std::make_shared<wo::GoogleService>(auth_service));
             }
 
-            session::session()
+            session::session(const std::string& db)
             {
-                connect();
+                connect(db);
             }
 
-            void session::connect()
+            void session::connect(const std::string& db)
             {
-                std::string c = "host=localhost user=muda password=fluffybunny dbname=muda";
-                _con.connect(c);
+                _con.connect(db);
                 _session.setConnection(_con);
 
                 _session.mapClass<model::muda>("muda");

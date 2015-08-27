@@ -30,6 +30,7 @@
 #include <Wt/Auth/AuthModel>
 #include <Wt/Auth/AuthWidget>
 #include <Wt/WServer>
+#include <Wt/WEnvironment>
 
 #include <boost/optional.hpp>
 #include <boost/regex.hpp>
@@ -105,7 +106,7 @@ class app : public WApplication
         //muda widgets
         WLineEdit* _new_muda = nullptr;
         WStackedWidget* _stack = nullptr;
-        mt::session _session;
+        mt::session_ptr _session;
         mm::user_dptr _user;
         mm::muda_list_dptr _mudas;
 
@@ -113,24 +114,34 @@ class app : public WApplication
 
 app::app(const WEnvironment& env) : WApplication{env}
 {
+    std::string db;
+
+    if(!env.server()->readConfigurationProperty("db", db))
+        throw std::invalid_argument("db configuration is missing");
+
+    _session = std::make_shared<mt::session>(db);
+
     login_screen();
+
+    ENSURE(_session);
 }
 
 
 void app::login_screen()
 {
     INVARIANT(root());
+    INVARIANT(_session);
 
     root()->clear();
     root()->addStyleClass("container");
 
-    _session.login().changed().connect(this, &app::oauth_event);
+    _session->login().changed().connect(this, &app::oauth_event);
 
-    auto auth_model = new wo::AuthModel{mt::session::auth(), _session.users(), this};
+    auto auth_model = new wo::AuthModel{mt::session::auth(), _session->users(), this};
     auth_model->addPasswordAuth(&mt::session::password_auth());
     auth_model->addOAuth(mt::session::oauth());
 
-    auto auth_w = new wo::AuthWidget{_session.login()};
+    auto auth_w = new wo::AuthWidget{_session->login()};
     auth_w->setModel(auth_model);
     auth_w->setRegistrationEnabled(true);
     auth_w->processEnvironment();
@@ -147,7 +158,9 @@ void app::login_screen()
 
 void app::oauth_event()
 {
-    if(_session.login().loggedIn())
+    INVARIANT(_session);
+
+    if(_session->login().loggedIn())
     {
         startup_muda_screen();
     }
@@ -155,7 +168,8 @@ void app::oauth_event()
 
 void app::startup_muda_screen()
 {
-    _user_name = _session.user_name();
+    INVARIANT(_session);
+    _user_name = _session->user_name();
 
     setTitle(_user_name);
     load_user();
@@ -176,10 +190,11 @@ void app::setup_view()
 
 void app::all_view()
 {
+    INVARIANT(_session);
     setup_view();
 
     //create muda list widget
-    auto list_widget = new mt::muda_list_widget{_session.dbs(), _mudas, 
+    auto list_widget = new mt::muda_list_widget{_session->dbs(), _mudas, 
             std::bind(&app::filter_by_all, this, ph::_1), root()};
 
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
@@ -192,15 +207,16 @@ void app::all_view()
 void app::triage_view()
 {
     INVARIANT(root());
+    INVARIANT(_session);
 
     setup_view();
 
     //create muda list widget
-    auto now = new mt::muda_list_widget{_session.dbs(), _mudas, 
+    auto now = new mt::muda_list_widget{_session->dbs(), _mudas, 
             std::bind(&app::filter_by_now, this, ph::_1), root()};
-    auto later = new mt::muda_list_widget{_session.dbs(), _mudas, 
+    auto later = new mt::muda_list_widget{_session->dbs(), _mudas, 
             std::bind(&app::filter_by_later, this, ph::_1), root()};
-    auto done = new mt::muda_list_widget{_session.dbs(), _mudas, 
+    auto done = new mt::muda_list_widget{_session->dbs(), _mudas, 
             std::bind(&app::filter_by_done, this, ph::_1), root()};
 
     _connections.push_back(now->when_model_updated(std::bind(&app::save_mudas, this)));
@@ -215,11 +231,12 @@ void app::triage_view()
 void app::now_view()
 {
     INVARIANT(root());
+    INVARIANT(_session);
 
     setup_view();
 
     //create muda list widget
-    auto list_widget = new mt::muda_list_widget{_session.dbs(), _mudas, 
+    auto list_widget = new mt::muda_list_widget{_session->dbs(), _mudas, 
             std::bind(&app::filter_by_now, this, ph::_1), root()};
 
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
@@ -232,11 +249,12 @@ void app::now_view()
 void app::later_view()
 {
     INVARIANT(root());
+    INVARIANT(_session);
 
     setup_view();
 
     //create muda list widget
-    auto list_widget = new mt::muda_list_widget{_session.dbs(), _mudas, 
+    auto list_widget = new mt::muda_list_widget{_session->dbs(), _mudas, 
             std::bind(&app::filter_by_later, this, ph::_1), root()};
 
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
@@ -249,9 +267,10 @@ void app::later_view()
 void app::done_view()
 {
     setup_view();
+    INVARIANT(_session);
 
     //create muda list widget
-    auto list_widget = new mt::muda_list_widget{_session.dbs(), _mudas, 
+    auto list_widget = new mt::muda_list_widget{_session->dbs(), _mudas, 
             std::bind(&app::filter_by_done, this, ph::_1), root()};
 
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
@@ -264,9 +283,10 @@ void app::done_view()
 void app::note_view()
 {
     setup_view();
+    INVARIANT(_session);
 
     //create muda list widget
-    auto list_widget = new mt::muda_list_widget{_session.dbs(), _mudas, 
+    auto list_widget = new mt::muda_list_widget{_session->dbs(), _mudas, 
             std::bind(&app::filter_by_note, this, ph::_1), root()};
 
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
@@ -289,9 +309,11 @@ void app::save_mudas()
 
 void app::load_user()
 {
-    dbo::Transaction t{_session.dbs()};
+    INVARIANT(_session);
 
-    _user = _session.user();
+    dbo::Transaction t{_session->dbs()};
+
+    _user = _session->user();
     if(!_user)
         throw std::runtime_error{"no user with: " + _user_name};
 
@@ -305,7 +327,7 @@ void app::load_user()
     {
         auto ml = new mm::muda_list;
         ml->name() = "main";
-        auto list = _session.dbs().add(ml);
+        auto list = _session->dbs().add(ml);
         lists.insert(list);
     }
 
@@ -461,9 +483,10 @@ bool app::filter_by_note(mm::muda_dptr muda)
 mm::muda_dptr app::add_new_muda()
 {
     INVARIANT(_new_muda);
+    INVARIANT(_session);
 
     //create new muda and add it to muda list
-    auto muda = _session.dbs().add(new mm::muda);
+    auto muda = _session->dbs().add(new mm::muda);
 
     mc::add_muda add{muda, *(_mudas.modify())};
     add();
@@ -492,7 +515,9 @@ void app::add_new_all_muda(mt::muda_list_widget* mudas)
 {
     REQUIRE(mudas);
     INVARIANT(_new_muda);
-    dbo::Transaction t{_session.dbs()};
+    INVARIANT(_session);
+
+    dbo::Transaction t{_session->dbs()};
 
     if(do_search()) {all_view();return;}
 
@@ -505,7 +530,9 @@ void app::add_new_triage_muda(mt::muda_list_widget* mudas)
 {
     REQUIRE(mudas);
     INVARIANT(_new_muda);
-    dbo::Transaction t{_session.dbs()};
+    INVARIANT(_session);
+
+    dbo::Transaction t{_session->dbs()};
 
     if(do_search()) {triage_view();return;}
 
@@ -518,7 +545,9 @@ void app::add_new_now_muda(mt::muda_list_widget* mudas)
 {
     REQUIRE(mudas);
     INVARIANT(_new_muda);
-    dbo::Transaction t{_session.dbs()};
+    INVARIANT(_session);
+
+    dbo::Transaction t{_session->dbs()};
 
     if(do_search()) {now_view();return;}
 
@@ -531,7 +560,9 @@ void app::add_new_later_muda(mt::muda_list_widget* mudas)
 {
     REQUIRE(mudas);
     INVARIANT(_new_muda);
-    dbo::Transaction t{_session.dbs()};
+    INVARIANT(_session);
+
+    dbo::Transaction t{_session->dbs()};
 
     if(do_search()) {later_view();return;}
 
@@ -544,7 +575,9 @@ void app::add_new_done_muda(mt::muda_list_widget* mudas)
 {
     REQUIRE(mudas);
     INVARIANT(_new_muda);
-    dbo::Transaction t{_session.dbs()};
+    INVARIANT(_session);
+
+    dbo::Transaction t{_session->dbs()};
 
     if(do_search()) {done_view();return;}
 
@@ -557,7 +590,9 @@ void app::add_new_note_muda(mt::muda_list_widget* mudas)
 {
     REQUIRE(mudas);
     INVARIANT(_new_muda);
-    dbo::Transaction t{_session.dbs()};
+    INVARIANT(_session);
+
+    dbo::Transaction t{_session->dbs()};
 
     if(do_search()) {note_view();return;}
 
@@ -581,6 +616,7 @@ void app::add_muda_to_list_widget(mm::muda_dptr muda, mt::muda_list_widget* list
 WApplication *create_application(const WEnvironment& env)
 {
     auto a = new app{env};
+
     a->useStyleSheet("resources/style.css");
     a->setTitle("Muda");                               
     return a;
