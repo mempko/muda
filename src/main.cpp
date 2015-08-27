@@ -177,10 +177,9 @@ void app::settings_screen()
     INVARIANT(root());
     INVARIANT(_session);
     REQUIRE(_session->login().loggedIn());
+    REQUIRE(_user);
 
     root()->clear();
-
-    if(_user) load_user();
 
     root()->addWidget(new WText{_user_name});
     root()->addWidget(new WText{_user_email});
@@ -210,7 +209,7 @@ void app::startup_muda_screen()
 
     root()->clear();
 
-    if(!_user) load_user();
+    load_user();
 
     setTitle(_user_name);
     triage_view();
