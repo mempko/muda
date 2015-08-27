@@ -29,40 +29,50 @@
 
 #include "wtui/mudawidget.h"
 
-namespace mempko { namespace muda { namespace wt { 
+namespace mempko 
+{ 
+    namespace muda 
+    { 
+        namespace wt 
+        { 
 
-    typedef std::list<boost::signals2::connection> connections;
+            typedef std::list<boost::signals2::connection> connections;
 
-    class muda_list_widget : public Wt::WCompositeWidget
-    {
-        public:
-            typedef boost::function<bool (model::muda_ptr)> filter_func;
-            muda_list_widget(
-                    model::muda_list& mudas, 
-                    filter_func filter, 
-                    Wt::WContainerWidget* parent = 0);
-            ~muda_list_widget();
-        public:
-            typedef boost::signals2::connection connection;
-            typedef boost::signals2::signal<void ()> update_sig;
-            typedef update_sig::slot_type update_slot;
-            connection when_model_updated(const update_slot& slot);
-        public:
-            void add_muda(model::muda_ptr muda);
-        private:
-            void create_ui();
-            void remove_muda(id_type id, muda_widget* widget);
-            void fire_update_sig();
-            void clear_connections();
-        private:
-            filter_func _filter;
-            model::muda_list& _mudas;
-            muda_widget_list _muda_widgets;
-            update_sig _update_sig;
-            Wt::WContainerWidget* _root;
+            class muda_list_widget : public Wt::WCompositeWidget
+            {
+                public:
+                    typedef boost::function<bool (model::muda_ptr)> filter_func;
+                    muda_list_widget(
+                            model::muda_list& mudas, 
+                            filter_func filter, 
+                            Wt::WContainerWidget* parent = 0);
+                    ~muda_list_widget();
 
-            connections _connections;
-    };
+                public:
+                    typedef boost::signals2::connection connection;
+                    typedef boost::signals2::signal<void ()> update_sig;
+                    typedef update_sig::slot_type update_slot;
+                    connection when_model_updated(const update_slot& slot);
 
-}}}//namespace
+                public:
+                    void add_muda(model::muda_ptr muda);
+
+                private:
+                    void create_ui();
+                    void remove_muda(id_type id, muda_widget* widget);
+                    void fire_update_sig();
+                    void clear_connections();
+
+                private:
+                    filter_func _filter;
+                    model::muda_list& _mudas;
+                    muda_widget_list _muda_widgets;
+                    update_sig _update_sig;
+                    Wt::WContainerWidget* _root;
+
+                    connections _connections;
+            };
+        }
+    }
+}
 #endif

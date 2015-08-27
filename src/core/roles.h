@@ -19,292 +19,323 @@
 #define MEMPKO_DCI_ROLES_H
 
 #include <boost/assert.hpp>
-#include <boost/bind.hpp>
 #include <boost/signals2.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 
 #include "core/types.h"
 #include "core/dci.h"
+#include "core/dbc.h"
 
-namespace mempko { namespace muda { namespace role {
-
-#define LOCK boost::mutex::scoped_lock l(self()->mutex())
-
-    class lockable
-    {
-        public:
-            boost::mutex& mutex() { return _m;}
-        private:
-            boost::mutex _m;
-    };
-
-    template< class tag>
-        class signaler0
+namespace mempko 
+{ 
+    namespace muda 
+    { 
+        namespace role 
         {
-            public:
-                typedef boost::signals2::signal<void ()> sig;				
-                typedef boost::signals2::connection connection;
-                typedef typename sig::slot_type slot_type;
-                connection when_signaled(const slot_type& slot) { return _sig.connect(slot);}
-            protected:
 
-                void signal() { _sig();}
-            private:
-                sig _sig;
-        };
+#define LOCK boost::mutex::scoped_lock l{self()->mutex()}
 
-    template< class tag, class obj>
-        class signaler1
-        {
-            public:
-                typedef boost::signals2::signal<void (obj)> sig;				
-                typedef boost::signals2::connection connection;
-                typedef typename sig::slot_type slot_type;
-                connection when_signaled(const slot_type& slot) { return _sig.connect(slot);}
-            protected:
-
-                void signal(obj o) { _sig(o);}
-
-            private:
-                sig _sig;
-        };
-
-    template<class m, class value>
-        class modifiable_object 
-        {
-            public:
-                virtual void change(const value&) = 0;
-                virtual ~modifiable_object(){}
-        };
-
-
-    TAG(text_change);
-
-    template <class m>
-        class modifable_text : 
-            public modifiable_object<m, text_type>,
-            public signaler0<text_change> 
-        {
-            ADD_SELF(m)
-            public:
-                virtual void change(const text_type& text) 
-                {
-                    self()->text(text);
-                    self()->stamp_modified();
-                    BOOST_ASSERT(self()->text() == text);
-                    signal();
-                }
-
-            public:
-                connection when_text_changes(const slot_type& slot) { return when_signaled(slot);}
-        };
-
-    template<class m>
-        class id_reciever
-        {
-            public:
-                virtual void recieve(id_type id) = 0;
-                virtual ~id_reciever(){}
-        };
-
-    template<class m>
-        class simple_id_reciever : public id_reciever<m>
-        {
-            ADD_SELF(m)
-            public:
-                virtual void recieve(id_type id)
-                {
-                    self()->id(id);
-                    BOOST_ASSERT(self()->id() == id);
-                }
-        };
-
-    template<class list>
-        class iterable
-        {
-            public:
-                typedef typename list::iterator iterator;
-                typedef typename list::const_iterator const_iterator;
-                virtual iterator begin() = 0;
-                virtual iterator end() = 0; 
-                virtual const_iterator begin() const  = 0;
-                virtual const_iterator end() const = 0; 
-                virtual ~iterable(){}
-        };
-
-    template<class list, class list_type>
-        class iterable_with_list : public iterable<list_type>
-        {
-            ADD_SELF(list)
-            public:
-                typedef typename list_type::iterator iterator;
-                typedef typename list_type::const_iterator const_iterator;
-                virtual iterator begin() { return self()->begin();}
-                virtual iterator end() { return self()->end();} 
-                virtual const_iterator begin() const { return self()->begin();}
-                virtual const_iterator end() const { return self()->end();} 
-        };
-
-    template<class object>
-        class appendable
-        {
-            public:
-                virtual bool add(object& obj) = 0;
-                virtual ~appendable(){}
-        };
-
-    TAG(when_appended)
-
-    template<class container, class object>
-        class appendable_container : 
-            public appendable<object>,
-            public signaler0<when_appended>
-        {
-            ADD_SELF(container)
-            public:
-                virtual bool add(object& obj) 
-                {
-                    LOCK;
-                    self()->list().push_back(obj);
-                    this->signal();
-                    return true;
-                }
-
-            public:
-                connection when_object_added(const slot_type& slot) { return when_signaled(slot);}
-        };
-
-    template<class handle>
-        class removable
-        {
-            public:
-                virtual bool remove(handle m) = 0;
-                virtual ~removable(){}
-        };
-
-    template<class object_ptr, class id>
-        struct id_is
-        {
-            public:
-                id_is(id v, object_ptr& removed_obj) : 
-                    _v(v), _removed_obj(removed_obj) {}
-                bool operator()(object_ptr obj) 
-                { 
-                    bool remove = obj->id() == _v; 
-                    if(remove) _removed_obj = obj;
-                    return remove;
-                }
-            private:
-                id _v;
-                object_ptr& _removed_obj;
-        };
-
-    TAG(when_removed)
-
-    template<class container, class object_ptr, class id>
-        class removable_container : 
-            public removable<id>,
-            public signaler1<when_removed, object_ptr>
-        {
-            ADD_SELF(container)
-            public:
-                virtual bool remove(id v)
-                {
-                    LOCK;
-                    object_ptr removed_obj;
-                    id_is<object_ptr, id> pred(v, removed_obj);
-                    self()->list().remove_if(pred);
-                    if(removed_obj) this->signal(removed_obj);
-                    return removed_obj;
-                }
-
-            public:
-                typedef typename signaler1<when_removed, object_ptr>::connection connection;
-                typedef typename signaler1<when_removed, object_ptr>::slot_type slot_type;
-                connection when_object_removed(const slot_type& slot) { return when_signaled(slot);}
-        };
-
-    class transitional_object
-    {
-        public:
-            virtual void transition() = 0;
-            virtual ~transitional_object(){}
-    };
-
-    TAG(when_state_changes)
-
-    template<class type>
-    class transitional_state : 
-        public transitional_object,
-        public signaler0<when_state_changes>
-
-    {
-        ADD_SELF(type)
-        public:
-            virtual void transition()
+            class lockable
             {
-                muda_state initial_state = self()->state();
-                switch(initial_state)
+                public:
+                    boost::mutex& mutex() { return _m;}
+                private:
+                    boost::mutex _m;
+            };
+
+            template< class tag>
+                class signaler0
                 {
-                    case LATER: self()->now(); break;
-                    case NOW: self()->done(); break;
-                    case DONE: self()->note(); break;
-                    case NOTE: self()->later(); break;
-                }
-                BOOST_ASSERT(initial_state != self()->state());
-                self()->stamp_modified();
-                this->signal();
-            }
-        public:
-            connection when_type_changes(const slot_type& slot) { return when_signaled(slot);}
-    };
+                    public:
+                        typedef boost::signals2::signal<void ()> sig;				
+                        typedef boost::signals2::connection connection;
+                        typedef typename sig::slot_type slot_type;
+                        connection when_signaled(const slot_type& slot) 
+                        { 
+                            return _sig.connect(slot);
+                        }
 
-    template<class type>
-        class time_stampable_when_created
-        {
-            public:
-                virtual void stamp() = 0;
-        };
+                    protected:
+                        void signal() { _sig();}
 
-    template <class type>
-        class ptime_stampable_when_created : public time_stampable_when_created<type>
-        {
-            ADD_SELF(type)
-            public:
-                virtual void stamp()
+                    private:
+                        sig _sig;
+                };
+
+            template< class tag, class obj>
+                class signaler1
                 {
-                    using namespace boost::gregorian;
-                    using namespace boost::posix_time;
-                    ptime now = second_clock::local_time();
-                    self()->created(now);
-                }
-        };
+                    public:
+                        typedef boost::signals2::signal<void (obj)> sig;				
+                        typedef boost::signals2::connection connection;
+                        typedef typename sig::slot_type slot_type;
+                        connection when_signaled(const slot_type& slot) 
+                        { 
+                            return _sig.connect(slot);
+                        }
 
-    template<class type>
-        class time_stampable_when_modified
-        {
-            public:
-                virtual void stamp_modified() = 0;
-        };
+                    protected:
+                        void signal(obj o) { _sig(o);}
 
-    template <class type>
-        class ptime_stampable_when_modified : public time_stampable_when_modified<type>
-        {
-            ADD_SELF(type)
-            public:
-                virtual void stamp_modified()
+                    private:
+                        sig _sig;
+                };
+
+            template<class m, class value>
+                class modifiable_object 
                 {
-                    using namespace boost::posix_time;
-                    using namespace boost::gregorian;
-                    time now = second_clock::local_time();
-                    self()->modified(now);
-                }
-        };
+                    public:
+                        virtual void change(const value&) = 0;
+                        virtual ~modifiable_object(){}
+                };
+
+
+            TAG(text_change);
+
+            template <class m>
+                class modifable_text : 
+                    public modifiable_object<m, text_type>,
+                    public signaler0<text_change> 
+            {
+                ADD_SELF(m)
+                public:
+                    virtual void change(const text_type& text) 
+                    {
+                        self()->text(text);
+                        self()->stamp_modified();
+                        signal();
+
+                        ENSURE(self()->text() == text);
+                    }
+
+                public:
+                    connection when_text_changes(const slot_type& slot) 
+                    { 
+                        return when_signaled(slot);
+                    }
+            };
+
+            template<class m>
+                class id_reciever
+                {
+                    public:
+                        virtual void recieve(id_type id) = 0;
+                        virtual ~id_reciever(){}
+                };
+
+            template<class m>
+                class simple_id_reciever : public id_reciever<m>
+            {
+                ADD_SELF(m)
+                public:
+                    virtual void recieve(id_type id)
+                    {
+                        self()->id(id);
+                        ENSURE_EQUAL(self()->id(), id);
+                    }
+            };
+
+            template<class list>
+                class iterable
+                {
+                    public:
+                        typedef typename list::iterator iterator;
+                        typedef typename list::const_iterator const_iterator;
+                        virtual iterator begin() = 0;
+                        virtual iterator end() = 0; 
+                        virtual const_iterator begin() const  = 0;
+                        virtual const_iterator end() const = 0; 
+                        virtual ~iterable(){}
+                };
+
+            template<class list, class list_type>
+                class iterable_with_list : public iterable<list_type>
+            {
+                ADD_SELF(list)
+                public:
+                    typedef typename list_type::iterator iterator;
+                    typedef typename list_type::const_iterator const_iterator;
+                    virtual iterator begin() { return self()->begin();}
+                    virtual iterator end() { return self()->end();} 
+                    virtual const_iterator begin() const { return self()->begin();}
+                    virtual const_iterator end() const { return self()->end();} 
+            };
+
+            template<class object>
+                class appendable
+                {
+                    public:
+                        virtual bool add(object& obj) = 0;
+                        virtual ~appendable(){}
+                };
+
+            TAG(when_appended)
+
+                template<class container, class object>
+                class appendable_container : 
+                    public appendable<object>,
+                    public signaler0<when_appended>
+            {
+                ADD_SELF(container)
+                public:
+                    virtual bool add(object& obj) 
+                    {
+                        LOCK;
+                        self()->list().push_back(obj);
+                        this->signal();
+                        return true;
+                    }
+
+                public:
+                    connection when_object_added(const slot_type& slot) 
+                    { 
+                        return when_signaled(slot);
+                    }
+            };
+
+            template<class handle>
+                class removable
+                {
+                    public:
+                        virtual bool remove(handle m) = 0;
+                        virtual ~removable(){}
+                };
+
+            template<class object_ptr, class id>
+                struct id_is
+                {
+                    public:
+                        id_is(id v, object_ptr& removed_obj) : 
+                            _v(v), _removed_obj(removed_obj) {}
+                        bool operator()(object_ptr obj) 
+                        { 
+                            bool remove = obj->id() == _v; 
+                            if(remove) _removed_obj = obj;
+                            return remove;
+                        }
+                    private:
+                        id _v;
+                        object_ptr& _removed_obj;
+                };
+
+            TAG(when_removed)
+
+                template<class container, class object_ptr, class id>
+                class removable_container : 
+                    public removable<id>,
+                    public signaler1<when_removed, object_ptr>
+            {
+                ADD_SELF(container)
+                public:
+                    virtual bool remove(id v)
+                    {
+                        LOCK;
+                        object_ptr removed_obj;
+                        id_is<object_ptr, id> pred{v, removed_obj};
+                        self()->list().remove_if(pred);
+                        if(removed_obj) this->signal(removed_obj);
+                        return removed_obj.get() != nullptr;
+                    }
+
+                public:
+                    typedef typename signaler1<when_removed, object_ptr>::connection connection;
+                    typedef typename signaler1<when_removed, object_ptr>::slot_type slot_type;
+                    connection when_object_removed(const slot_type& slot) 
+                    { 
+                        return when_signaled(slot);
+                    }
+            };
+
+            class transitional_object
+            {
+                public:
+                    virtual void transition() = 0;
+                    virtual ~transitional_object(){}
+            };
+
+            TAG(when_state_changes)
+
+                template<class type>
+                class transitional_state : 
+                    public transitional_object,
+                    public signaler0<when_state_changes>
+
+            {
+                ADD_SELF(type)
+                public:
+                    virtual void transition()
+                    {
+                        auto initial_state = self()->state();
+                        switch(initial_state)
+                        {
+                            case LATER: self()->now(); break;
+                            case NOW: self()->done(); break;
+                            case DONE: self()->note(); break;
+                            case NOTE: self()->later(); break;
+                        }
+                        self()->stamp_modified();
+                        this->signal();
+
+                        ENSURE(initial_state != self()->state());
+                    }
+
+                public:
+                    connection when_type_changes(const slot_type& slot) 
+                    { 
+                        return when_signaled(slot);
+                    }
+            };
+
+            template<class type>
+                class time_stampable_when_created
+                {
+                    public:
+                        virtual void stamp() = 0;
+                };
+
+            template <class type>
+                class ptime_stampable_when_created : public time_stampable_when_created<type>
+            {
+                ADD_SELF(type)
+                public:
+                    virtual void stamp()
+                    {
+                        using namespace boost::gregorian;
+                        using namespace boost::posix_time;
+
+                        auto now = second_clock::local_time();
+                        self()->created(now);
+                    }
+            };
+
+            template<class type>
+                class time_stampable_when_modified
+                {
+                    public:
+                        virtual void stamp_modified() = 0;
+                };
+
+            template <class type>
+                class ptime_stampable_when_modified : public time_stampable_when_modified<type>
+            {
+                ADD_SELF(type)
+                public:
+                    virtual void stamp_modified()
+                    {
+                        using namespace boost::posix_time;
+                        using namespace boost::gregorian;
+
+                        auto now = second_clock::local_time();
+                        self()->modified(now);
+                    }
+            };
 
 #undef LOCK
 
-}}} //namespace
+        }
+    }
+} 
 
 #endif
 

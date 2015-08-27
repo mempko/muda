@@ -15,7 +15,6 @@
 }
 
 .text-box {
-    background-image:url(images/muda_bg.jpg);
 	background-repeat:repeat-x;
 	border:1px solid #d1c7ac;
 	color:#333333;
@@ -25,7 +24,6 @@
 }
 
 .muda-now {
-    background-image:url(images/muda_bg_now.jpg);
 	background-repeat:repeat-x;
 	border:1px solid #d1c7ac;
 	color:#333333;
@@ -35,7 +33,6 @@
 }
 
 .muda-later {
-    background-image:url(images/muda_bg_later.jpg);
 	background-repeat:repeat-x;
 	border:1px solid #d1c7ac;
 	color:#333333;
@@ -44,7 +41,6 @@
 	font-family:tahoma, arial, sans-serif;
 }
 .muda-done {
-    background-image:url(images/muda_bg_done.jpg);
 	background-repeat:repeat-x;
 	border:1px solid #d1c7ac;
 	color:#333333;
@@ -54,7 +50,6 @@
 }
 
 .muda-note {
-    background-image:url(images/muda_bg.jpg);
 	background-repeat:repeat-x;
 	border:1px solid #d1c7ac;
 	color:#333333;
@@ -65,7 +60,7 @@
 .btn {
 	float: left;
 	height: 20px;
-	background: url(images/btn_stretch.png) repeat-x left top;
+	background: url(resource/images/btn_stretch.png) repeat-x left top;
 	padding: 3px;
 	color: #fff;
 	font-size: 1em;

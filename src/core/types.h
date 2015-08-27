@@ -24,14 +24,17 @@
 
 #include <string>
 
-namespace mempko { namespace muda {
+namespace mempko 
+{ 
+    namespace muda 
+    {
+        typedef std::wstring text_type;
+        typedef long id_type;
+        enum muda_state { NOW, LATER, DONE, NOTE};
 
-    typedef std::wstring text_type;
-    typedef long id_type;
-    enum muda_state { NOW, LATER, DONE, NOTE};
+        typedef boost::gregorian::date date;
+        typedef boost::posix_time::ptime time;
 
-    typedef boost::gregorian::date date;
-    typedef boost::posix_time::ptime time;
-
-}}//namespace 
+    }
+}
 #endif

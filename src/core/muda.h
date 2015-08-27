@@ -33,200 +33,210 @@
 #include "core/roles.h"
 #include "core/context.h"
 
-namespace mempko { namespace muda { namespace model { 
+namespace mempko 
+{ 
+    namespace muda 
+    { 
+        namespace model 
+        { 
 
 #define LOCK boost::mutex::scoped_lock lll(this->mutex())
 
-    class muda_type : 
-        public role::lockable,
-        public role::transitional_state<muda_type>,
-        public role::ptime_stampable_when_modified<muda_type>
-    {
-        public:
-            muda_type() : _state(NOW) {}
+            class muda_type : 
+                public role::lockable,
+                public role::transitional_state<muda_type>,
+                public role::ptime_stampable_when_modified<muda_type>
+            {
 
-        public:
-            muda_state state() const { return _state;} 
-            void state(muda_state s) { LOCK; _state = s; } 
+                public:
+                    muda_state state() const { return _state;} 
+                    void state(muda_state s) { LOCK; _state = s; } 
 
-            void now() { LOCK; _state = NOW;}
-            void later() { LOCK; _state = LATER;}
-            void done() { LOCK; _state = DONE;}
-            void note() { LOCK; _state = NOTE;}
+                    void now() { LOCK; _state = NOW;}
+                    void later() { LOCK; _state = LATER;}
+                    void done() { LOCK; _state = DONE;}
+                    void note() { LOCK; _state = NOTE;}
 
-            time modified() const { return _modified;}
-            void modified(const time& t) { LOCK; _modified = t;}
-        private:
-            muda_state _state;
-            time _modified;
+                    time modified() const { return _modified;}
+                    void modified(const time& t) { LOCK; _modified = t;}
 
-        private:
-            friend class boost::serialization::access;
-            template<class Archive>
-                void serialize(Archive & ar, const unsigned int version)
-                {
-                    LOCK;
-                    using namespace boost::serialization;
-                    ar & make_nvp("state", _state);
-                    ar & make_nvp("modified", _modified);
-                }
-    };
+                private:
+                    muda_state _state = NOW;
+                    time _modified;
 
-	class muda : 
-        public role::lockable,
-        public role::modifable_text<muda>,
-        public role::simple_id_reciever<muda>,
-        public role::ptime_stampable_when_created<muda>,
-        public role::ptime_stampable_when_modified<muda>
-    {
-        public:
-            muda() : _text(), _id(0), _type() {}
-            const text_type& text() const { return _text;}
-            void text(const text_type& text) { LOCK; _text = text;}
+                private:
+                    friend class boost::serialization::access;
+                    template<class Archive>
+                        void serialize(Archive & ar, const unsigned int version)
+                        {
+                            LOCK;
+                            using namespace boost::serialization;
+                            ar & make_nvp("state", _state);
+                            ar & make_nvp("modified", _modified);
+                        }
+            };
 
-            id_type id() const { return _id;}
-            void id(id_type v) { LOCK; _id = v;}
+            class muda : 
+                public role::lockable,
+                public role::modifable_text<muda>,
+                public role::simple_id_reciever<muda>,
+                public role::ptime_stampable_when_created<muda>,
+                public role::ptime_stampable_when_modified<muda>
+            {
+                public:
+                    muda() : _text{}, _id{0}, _type{} {}
 
-            const muda_type& type() const {return _type;}
-            muda_type& type() {return _type;}
+                    const text_type& text() const { return _text;}
+                    void text(const text_type& text) { LOCK; _text = text;}
 
-            time created() const { return _created;}
-            void created(const time& t) { LOCK; _created = t;}
+                    id_type id() const { return _id;}
+                    void id(id_type v) { LOCK; _id = v;}
 
-            time modified() const { return _modified;}
-            void modified(const time& t) { LOCK; _modified = t;}
+                    const muda_type& type() const {return _type;}
+                    muda_type& type() {return _type;}
 
-        private:
-            text_type _text;
-            id_type _id;
-            muda_type _type;
-            time _created;
-            time _modified;
+                    time created() const { return _created;}
+                    void created(const time& t) { LOCK; _created = t;}
 
-        private:
+                    time modified() const { return _modified;}
+                    void modified(const time& t) { LOCK; _modified = t;}
 
-            friend class boost::serialization::access;
-            template<class Archive>
-                void serialize(Archive & ar, const unsigned int version)
-                {
-                    LOCK;
-                    using namespace boost::serialization;
-                    ar & make_nvp("id", _id);
-                    ar & make_nvp("text", _text);
-                    ar & make_nvp("type", _type);
-                    ar & make_nvp("created", _created);
-                    ar & make_nvp("modified", _modified);
-                }
-    };
+                private:
+                    text_type _text;
+                    id_type _id;
+                    muda_type _type;
+                    time _created;
+                    time _modified;
 
-    typedef boost::shared_ptr<muda> muda_ptr;
-    typedef std::list<muda_ptr> muda_ptr_list;
+                private:
+                    friend class boost::serialization::access;
+                    template<class Archive>
+                        void serialize(Archive & ar, const unsigned int version)
+                        {
+                            LOCK;
+                            using namespace boost::serialization;
+                            ar & make_nvp("id", _id);
+                            ar & make_nvp("text", _text);
+                            ar & make_nvp("type", _type);
+                            ar & make_nvp("created", _created);
+                            ar & make_nvp("modified", _modified);
+                        }
+            };
 
-    class muda_list : 
-        public role::lockable,
-        public role::iterable_with_list<muda_list, muda_ptr_list>,
-        public role::appendable_container<muda_list,muda_ptr>,
-        public role::removable_container<muda_list, muda_ptr, id_type>
-    {
-        public:
-            typedef muda_ptr_list list_type;
-            typedef list_type::iterator iterator;
-            typedef list_type::const_iterator const_iterator;
-            typedef list_type::reverse_iterator reverse_iterator;
-            typedef list_type::const_reverse_iterator const_reverse_iterator;
+            typedef boost::shared_ptr<muda> muda_ptr;
+            typedef std::list<muda_ptr> muda_ptr_list;
 
-            list_type& list() { return _list;}
-            const list_type& list() const { return _list;}
+            class muda_list : 
+                public role::lockable,
+                public role::iterable_with_list<muda_list, muda_ptr_list>,
+                public role::appendable_container<muda_list,muda_ptr>,
+                public role::removable_container<muda_list, muda_ptr, id_type>
+            {
+                public:
+                    typedef muda_ptr_list list_type;
+                    typedef list_type::iterator iterator;
+                    typedef list_type::const_iterator const_iterator;
+                    typedef list_type::reverse_iterator reverse_iterator;
+                    typedef list_type::const_reverse_iterator const_reverse_iterator;
 
-            iterator begin() { return _list.begin();}
-            iterator end() { return _list.end();}
-            const_iterator begin() const { return _list.begin();}
-            const_iterator end() const { return _list.end();}
-            reverse_iterator rbegin() { return _list.rbegin();}
-            reverse_iterator rend() { return _list.rend();}
-            const_reverse_iterator rbegin() const { return _list.rbegin();}
-            const_reverse_iterator rend() const { return _list.rend();}
+                    list_type& list() { return _list;}
+                    const list_type& list() const { return _list;}
 
-            list_type::size_type size() const { return _list.size();}
-        private:
-            list_type _list;
+                    iterator begin() { return _list.begin();}
+                    iterator end() { return _list.end();}
+                    const_iterator begin() const { return _list.begin();}
+                    const_iterator end() const { return _list.end();}
+                    reverse_iterator rbegin() { return _list.rbegin();}
+                    reverse_iterator rend() { return _list.rend();}
+                    const_reverse_iterator rbegin() const { return _list.rbegin();}
+                    const_reverse_iterator rend() const { return _list.rend();}
 
-        private:
+                    list_type::size_type size() const { return _list.size();}
 
-            friend class boost::serialization::access;
-            template<class Archive>
-                void serialize(Archive & ar, const unsigned int version)
-                {
-                    LOCK;
-                    using namespace boost::serialization;
-                    ar & make_nvp("mudas", _list);
-                }
-    };
+                private:
+                    list_type _list;
 
-    class text_value : 
-        public role::lockable,
-        public role::ptime_stampable_when_modified<text_value>,
-        public role::modifable_text<text_value>
-    {
-        public:
-            const text_type& text() const { return _text;}
-            const void text(const text_type& t) { _text = t;}
+                private:
+                    friend class boost::serialization::access;
+                    template<class Archive>
+                        void serialize(Archive & ar, const unsigned int version)
+                        {
+                            LOCK;
+                            using namespace boost::serialization;
+                            ar & make_nvp("mudas", _list);
+                        }
+            };
 
-            time modified() const { return _modified;}
-            void modified(const time& t) { _modified = t;}
-        private:
-            text_type _text;
-            time _modified;
+            class text_value : 
+                public role::lockable,
+                public role::ptime_stampable_when_modified<text_value>,
+                public role::modifable_text<text_value>
+            {
+                public:
+                    const text_type& text() const { return _text;}
+                    const void text(const text_type& t) { _text = t;}
 
-        private:
+                    time modified() const { return _modified;}
+                    void modified(const time& t) { _modified = t;}
 
-            friend class boost::serialization::access;
-            template<class Archive>
-                void serialize(Archive & ar, const unsigned int version)
-                {
-                    using namespace boost::serialization;
-                    ar & make_nvp("text", _text);
-                    ar & make_nvp("modified", _modified);
-                }
-    };
+                private:
+                    text_type _text;
+                    time _modified;
 
-    class user
-    {
-        public:
-            const text_value& name() const { return _name;}
-            text_value& name() { return _name;}
+                private:
+                    friend class boost::serialization::access;
+                    template<class Archive>
+                        void serialize(Archive & ar, const unsigned int version)
+                        {
+                            using namespace boost::serialization;
+                            ar & make_nvp("text", _text);
+                            ar & make_nvp("modified", _modified);
+                        }
+            };
 
-            const text_value& email() const { return _email;}
-            text_value& email() { return _email;}
+            class user
+            {
+                public:
+                    const text_value& name() const { return _name;}
+                    text_value& name() { return _name;}
 
-        private:
-            text_value _name;
-            text_value _email;
-        private:
+                    const text_value& email() const { return _email;}
+                    text_value& email() { return _email;}
 
-            friend class boost::serialization::access;
-            template<class Archive>
-                void serialize(Archive & ar, const unsigned int version)
-                {
-                    using namespace boost::serialization;
-                    ar & make_nvp("name", _name);
-                    ar & make_nvp("email", _email);
-                }
-    };
+                private:
+                    text_value _name;
+                    text_value _email;
 
+                private:
+                    friend class boost::serialization::access;
+                    template<class Archive>
+                        void serialize(Archive & ar, const unsigned int version)
+                        {
+                            using namespace boost::serialization;
+                            ar & make_nvp("name", _name);
+                            ar & make_nvp("email", _email);
+                        }
+            };
 
 #undef LOCK
+        }
+    }
+}
 
+namespace mempko 
+{ 
+    namespace muda 
+    { 
+        namespace context 
+        { 
+            //useful typedefs
+            typedef add_object<model::muda,model::muda_ptr,model::muda_list> add_muda;
+            typedef remove_object<model::muda_list, id_type> remove_muda;
+            typedef modify_text_context<model::muda> modify_muda_text;
 
-}}}//namespace
-
-namespace mempko { namespace muda { namespace context { 
-    //useful typedefs
-    typedef add_object<model::muda,model::muda_ptr,model::muda_list> add_muda;
-    typedef remove_object<model::muda_list, id_type> remove_muda;
-    typedef modify_text_context<model::muda> modify_muda_text;
-
-}}}//namespace
+        }
+    }
+}
 
 BOOST_CLASS_VERSION(mempko::muda::model::muda_type,1)
 BOOST_CLASS_VERSION(mempko::muda::model::muda,1)
