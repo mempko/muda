@@ -50,7 +50,7 @@ namespace mempko { namespace muda { namespace wt {
     void muda_widget::update_text()
     {
         BOOST_ASSERT(_muda);
-        _edit->setText(w::WString("changed_text: ") + _muda->text());
+        _edit->setText(_muda->text());
         std::cout << "id: " << _muda->id() << std::endl;
     }
 
