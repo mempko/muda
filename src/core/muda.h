@@ -17,21 +17,52 @@
 
 namespace mempko { namespace muda { namespace model { 
 
+    class muda_triage
+    {
+        public:
+            enum state_t { NOW, LATER, DONE};
+            muda_triage() : _state(NOW) {}
+
+        public:
+            state_t state() const { return _state;} 
+            void state(state_t s) { _state = s;} 
+
+            void now() { _state = NOW;}
+            void later() { _state = LATER;}
+            void done() { _state = DONE;}
+
+        private:
+            state_t _state;
+
+        private:
+            friend class boost::serialization::access;
+            template<class Archive>
+                void serialize(Archive & ar, const unsigned int version)
+                {
+                    using namespace boost::serialization;
+                    ar & make_nvp("state", _state);
+                }
+    };
+
 	class muda : 
         public role::modifable_text_and_notify<muda>,
         public role::simple_id_reciever<muda>
     {
         public:
-            muda() : _text(), _id(0) {}
+            muda() : _text(), _id(0), _triage() {}
             const text_type& text() const { return _text;}
             void text(const text_type& text) { _text = text;}
 
             id_type id() const { return _id;}
             void id(id_type v) { _id = v;}
 
+            muda_triage& triage() {return _triage;}
+            const muda_triage& triage() const {return _triage;}
+
         private:
             text_type _text;
             id_type _id;
+            muda_triage _triage;
 
         private:
 
@@ -42,6 +73,7 @@ namespace mempko { namespace muda { namespace model {
                     using namespace boost::serialization;
                     ar & make_nvp("id", _id);
                     ar & make_nvp("text", _text);
+                    ar & make_nvp("triage", _triage);
                 }
     };
 
