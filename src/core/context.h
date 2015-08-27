@@ -67,7 +67,7 @@ namespace mempko { namespace muda { namespace context {
             {
                 typedef typename list::list_type list_type;
                 set_incremental_id<m, list_type> set_id(*_m, _list);
-                role::appendable_container<m_ptr>* sink = &_list;
+                role::appendable<m_ptr>* sink = &_list;
                 BOOST_ASSERT(sink);
 
                 set_id();
@@ -86,7 +86,7 @@ namespace mempko { namespace muda { namespace context {
             public:
                 remove_object(
                         id v, 
-                        role::removable_container<id>& removable) :
+                        role::removable<id>& removable) :
                     _id(v), _removable(removable) {}
                 void operator()()
                 {
@@ -95,7 +95,7 @@ namespace mempko { namespace muda { namespace context {
                 }
             private:
                 id _id;
-                role::removable_container<id>& _removable;
+                role::removable<id>& _removable;
         };
 
     class transition_state

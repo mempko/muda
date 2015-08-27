@@ -19,7 +19,7 @@
 namespace mempko { namespace muda { namespace model { 
 
     class muda_type : 
-        public role::transitional_state_and_notify<muda_type>,
+        public role::transitional_state<muda_type>,
         public role::ptime_stampable_when_modified<muda_type>
     {
         public:
@@ -52,7 +52,7 @@ namespace mempko { namespace muda { namespace model {
     };
 
 	class muda : 
-        public role::modifable_text_and_notify<muda>,
+        public role::modifable_text<muda>,
         public role::simple_id_reciever<muda>,
         public role::ptime_stampable_when_created<muda>,
         public role::ptime_stampable_when_modified<muda>
@@ -101,8 +101,8 @@ namespace mempko { namespace muda { namespace model {
 
     class muda_list : 
         public role::iterable_with_list<muda_list, muda_ptr_list>,
-        public role::appendable_container_and_notifier<muda_list,muda_ptr>,
-        public role::removable_container_and_notifier<muda_list, muda_ptr, id_type>
+        public role::appendable_container<muda_list,muda_ptr>,
+        public role::removable_container<muda_list, muda_ptr, id_type>
     {
         public:
             typedef muda_ptr_list list_type;
@@ -140,7 +140,7 @@ namespace mempko { namespace muda { namespace model {
 
     class text_value : 
         public role::ptime_stampable_when_modified<text_value>,
-        public role::modifable_text_and_notify<text_value>
+        public role::modifable_text<text_value>
     {
         public:
             const text_type& text() const { return _text;}

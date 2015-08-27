@@ -118,11 +118,11 @@ namespace mempko { namespace muda { namespace role {
         };
 
     template<class object>
-        class appendable_container
+        class appendable
         {
             public:
                 virtual bool add(object& obj) = 0;
-                virtual ~appendable_container(){}
+                virtual ~appendable(){}
         };
 
     TAG(when_appended)
@@ -145,11 +145,11 @@ namespace mempko { namespace muda { namespace role {
         };
 
     template<class handle>
-        class removable_container
+        class removable
         {
             public:
                 virtual bool remove(handle m) = 0;
-                virtual ~removable_container(){}
+                virtual ~removable(){}
         };
 
     template<class object_ptr, class id>
