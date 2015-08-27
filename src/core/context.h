@@ -66,8 +66,6 @@ namespace mempko
                                     _list.begin(), _list.end(), 
                                     util::comp_ptr_by_id<list_value>());
 
-                            CHECK(*max != 0);
-
                             //increment
                             id_type id = max != _list.end() ? (*max)->id() + 1: 0;
 

@@ -35,8 +35,6 @@ link_directories(${Boost_LIBRARY_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
 
 #setup wt
-#link_directories(${muda_SOURCE_DIR}/external/wt/lib)
-#include_directories(${muda_SOURCE_DIR}/external/wt/include)
 link_directories(/usr/local/lib)
 include_directories(/usr/local/include)
 
