@@ -138,8 +138,8 @@ void app::add_muda_widget(mm::muda_ptr muda)
     //create new muda widget and add it to widget list
     mt::muda_widget* new_widget = new mt::muda_widget(muda);
     
-    new_widget->when_delete_pressed(
-            bind(&app::remove_muda, this, _1, _2));
+    new_widget->when_delete_pressed(bind(&app::remove_muda, this, _1, _2));
+    new_widget->when_type_pressed(bind(&app::save_mudas, this));
 
     if(_muda_widgets.empty()) root()->addWidget(new_widget);
     else root()->insertBefore(new_widget, _muda_widgets.back());

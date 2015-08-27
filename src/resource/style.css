@@ -8,18 +8,80 @@
 	margin-bottom:4px;
 }
 
-.muda-delete {
-    height:20px;
-}
-
-.muda {
+.text-box {
     background-image:url(images/muda_bg.jpg);
 	background-repeat:repeat-x;
 	border:1px solid #d1c7ac;
 	color:#333333;
-    height:20px;
 	padding:3px;
-	margin-right:0px;
+	margin-right:1px;
 	font-family:tahoma, arial, sans-serif;
+}
+
+.muda-now {
+    background-image:url(images/muda_bg_now.jpg);
+	background-repeat:repeat-x;
+	border:1px solid #d1c7ac;
+	color:#333333;
+	background-color:#A9F5A9;
+	padding:3px;
+	font-family:tahoma, arial, sans-serif;
+}
+.muda-later {
+    background-image:url(images/muda_bg_later.jpg);
+	background-repeat:repeat-x;
+	border:1px solid #d1c7ac;
+	color:#333333;
+	background-color:#F2F5A9;
+	padding:3px;
+	font-family:tahoma, arial, sans-serif;
+}
+.muda-done {
+    background-image:url(images/muda_bg_done.jpg);
+	background-repeat:repeat-x;
+	border:1px solid #d1c7ac;
+	color:#333333;
+	background-color:#BDBDBD;
+	padding:3px;
+	font-family:tahoma, arial, sans-serif;
+}
+
+.muda-note {
+    background-image:url(images/muda_bg.jpg);
+	background-repeat:repeat-x;
+	border:1px solid #d1c7ac;
+	color:#333333;
+	padding:3px;
+	font-family:tahoma, arial, sans-serif;
+}
+
+.btn {
+	float: left;
+	height: 40px;
+	background: url(images/btn_stretch.png) repeat-x left top;
+	padding: 3px;
+	color: #fff;
+	font-size: 1em;
+	text-decoration: none;
+    text-align: center;
+	font-family:tahoma, arial, sans-serif;
+}
+
+.muda-delete {
+	background-color:#8A0808;
+}
+
+.muda-now-button {
+	background-color:#088A08;
+}
+.muda-later-button {
+	background-color:#868A08;
+}
+.muda-done-button {
+	background-color:#2E2E2E;
+}
+
+.muda-note-button {
+	background-color:#A4A4A4;
 }
 

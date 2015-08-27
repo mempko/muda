@@ -19,6 +19,7 @@ namespace mempko { namespace muda { namespace wt {
     muda_widget::~muda_widget()
     {
         _when_text_changes.disconnect();
+        _when_type_changes.disconnect();
     }
 
     void muda_widget::create_ui()
@@ -26,8 +27,6 @@ namespace mempko { namespace muda { namespace wt {
         BOOST_ASSERT(_muda);
         //create text editor
         _edit = new w::WLineEdit();
-        _edit->resize(w::WLength(100, w::WLength::Percentage), w::WLength::Auto);
-        _edit->setStyleClass("muda");
         //set text to muda text
         _edit->setText(_muda->text());
 
@@ -35,24 +34,32 @@ namespace mempko { namespace muda { namespace wt {
         _edit->enterPressed().connect
             (bind(&muda_widget::change_text, this));
 
-        //when the model changes update the text
+        //when the model changes the text or type
         _when_text_changes = _muda->when_text_changes(
                 bind(&muda_widget::update_text, this));
+        _when_type_changes = _muda->type().when_type_changes(
+                bind(&muda_widget::update_type, this));
 
         //delete button
-        _deleteButton = new w::WImage("images/delete.png");
-        _deleteButton->setPopup(true);
-        _deleteButton->setStyleClass("muda-delete");
-
-        hide_delete();
-
+        _deleteButton = new w::WLabel("x");
+        _deleteButton->setStyleClass("btn muda-delete");
         _deleteButton->clicked().connect
             (bind(&muda_widget::delete_pressed, this));
+
+        //type button
+        _type = new w::WLabel("now");
+        _type->clicked().connect
+            (bind(&muda_widget::type_pressed, this));
+        update_type();
+        hide_buttons();
 
         //layout
         _layout = new w::WHBoxLayout();
         _layout->setSpacing(0);
         _layout->addWidget(_edit);
+        _layout->addSpacing(w::WLength(6, w::WLength::Pixel));
+        _layout->addWidget(_type);
+        _layout->addSpacing(w::WLength(2, w::WLength::Pixel));
         _layout->addWidget(_deleteButton);
         _layout->setStretchFactor(_edit, 1);
         _layout->setContentsMargins(0,0,0,0);
@@ -62,9 +69,9 @@ namespace mempko { namespace muda { namespace wt {
         _root->resize(w::WLength(99, w::WLength::Percentage), w::WLength::Auto);
 
         _root->mouseWentOver().connect
-            (bind(&muda_widget::show_delete, this));
+            (bind(&muda_widget::show_buttons, this));
         _root->mouseWentOut().connect
-            (bind(&muda_widget::hide_delete, this));
+            (bind(&muda_widget::hide_buttons, this));
     }
 
     void muda_widget::change_text()
@@ -82,28 +89,70 @@ namespace mempko { namespace muda { namespace wt {
         std::cout << "id: " << _muda->id() << std::endl;
     }
 
-    void muda_widget::show_delete()
+    void muda_widget::show_buttons()
     {
-        BOOST_ASSERT(_deleteButton);
         _deleteButton->setHidden(false);
+        _type->setHidden(false);
     }
 
-    void muda_widget::hide_delete()
+    void muda_widget::hide_buttons()
     {
-        BOOST_ASSERT(_deleteButton);
         _deleteButton->setHidden(true);
+        _type->setHidden(true);
     }
 
     void muda_widget::delete_pressed()
     {
         BOOST_ASSERT(_muda);
-        hide_delete();
+        hide_buttons();
         _delete_sig(_muda->id(), this);
     }
 
     boost::signals2::connection muda_widget::when_delete_pressed(const delete_slot& slot) 
     { 
         return _delete_sig.connect(slot);
+    }
+
+    boost::signals2::connection muda_widget::when_type_pressed(const type_slot& slot) 
+    { 
+        return _type_sig.connect(slot);
+    }
+
+    void muda_widget::type_pressed()
+    {
+        BOOST_ASSERT(_muda);
+        context::transition_state transition(_muda->type());
+        transition();
+        _type_sig();
+    }
+
+    void muda_widget::update_type()
+    {
+        BOOST_ASSERT(_muda);
+        BOOST_ASSERT(_type);
+        switch(_muda->type().state())
+        {
+            case NOW: 
+                _type->setText("now");
+                _type->setStyleClass("btn muda-now-button");
+                _edit->setStyleClass("muda-now");
+                break;
+            case LATER: 
+                _type->setText("later");
+                _type->setStyleClass("btn muda-later-button");
+                _edit->setStyleClass("muda-later");
+                break;
+            case DONE: 
+                _type->setText("done");
+                _type->setStyleClass("btn muda-done-button");
+                _edit->setStyleClass("muda-done");
+                break;
+            case NOTE: 
+                _type->setText("note");
+                _type->setStyleClass("btn muda-note-button");
+                _edit->setStyleClass("muda-note");
+                break;
+        }
     }
 
 }}}//namespace

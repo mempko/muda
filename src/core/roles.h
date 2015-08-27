@@ -103,8 +103,9 @@ namespace mempko { namespace muda { namespace role {
                 }
             public:
                 typedef boost::signals2::signal<void ()> sig;				
+                typedef boost::signals2::connection connection;
                 typedef typename sig::slot_type slot_type;
-                void when_object_added(const slot_type& slot) { _sig.connect(slot);}
+                connection when_object_added(const slot_type& slot) { return _sig.connect(slot);}
             private:
                 sig _sig;
         };
@@ -144,8 +145,9 @@ namespace mempko { namespace muda { namespace role {
 
             public:
                 typedef boost::signals2::signal<void (object_ptr)> sig;				
+                typedef boost::signals2::connection connection;
                 typedef typename sig::slot_type slot_type;
-                void when_object_removed(const slot_type& slot) { _sig.connect(slot);}
+                connection when_object_removed(const slot_type& slot) { return _sig.connect(slot);}
             private:
                 sig _sig;
         };
@@ -166,18 +168,19 @@ namespace mempko { namespace muda { namespace role {
                 muda_state initial_state = self()->state();
                 switch(initial_state)
                 {
-                    case NOW: self()->done(); break;
                     case LATER: self()->now(); break;
+                    case NOW: self()->done(); break;
                     case DONE: self()->note(); break;
-                    case NOTE: self()->now(); break;
+                    case NOTE: self()->later(); break;
                 }
                 BOOST_ASSERT(initial_state != self()->state());
                 _sig();
             }
         public:
             typedef boost::signals2::signal<void ()> sig;				
+            typedef boost::signals2::connection connection;
             typedef typename sig::slot_type slot_type;
-            void when_type_changes(const slot_type& slot) { _sig.connect(slot);}
+            connection when_type_changes(const slot_type& slot) { return _sig.connect(slot);}
 
         private:
             sig _sig;
