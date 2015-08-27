@@ -452,7 +452,6 @@ void app::create_header_ui()
 
     _new_muda = new WLineEdit;
     _new_muda->setStyleClass("new-muda");
-    _new_muda->resize(WLength(100, WLength::Percentage), WLength::Auto);
     _new_muda->setFocus();
 
     auto hbox = new WHBoxLayout;
