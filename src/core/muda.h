@@ -21,16 +21,22 @@ namespace mempko { namespace muda { namespace model {
         public role::simple_id_reciever<muda>
     {
         public:
+            muda() : _text(), _id(0) {}
             const text_type& text() const { return _text;}
             void text(const text_type& text) { _text = text;}
 
+            id_type id() const { return _id;}
+            void id(id_type v) { _id = v;}
+
         private:
             text_type _text;
+            id_type _id;
 
         private:
             template<class Archive>
                 void serialize(Archive & ar, const unsigned int version)
                 {
+                    ar & make_nvp("id", _id);
                     ar & make_nvp("text", _text);
                 }
     };
