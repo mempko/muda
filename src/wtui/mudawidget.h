@@ -69,6 +69,7 @@ namespace mempko
                     void update_type();
                     void type_pressed();
                     void delete_pressed();
+                    void update_date();
                     void set_style();
 
                 private:
@@ -79,6 +80,7 @@ namespace mempko
                     Wt::WHBoxLayout* _layout;
                     Wt::WLineEdit* _edit;
                     Wt::WLabel* _delete_button;
+                    Wt::WLabel* _date;
                     Wt::WLabel* _type;
                     delete_sig _delete_sig;
                     type_sig _type_sig;

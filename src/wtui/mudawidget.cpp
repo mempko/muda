@@ -21,6 +21,9 @@
 #include "core/dbc.h"
 
 #include <Wt/WLength>
+#include <sstream>
+#include <chrono>
+#include <ctime>
 
 namespace mempko 
 { 
@@ -32,6 +35,25 @@ namespace mempko
             using boost::bind;
             using boost::mem_fn;
             namespace w = Wt;
+
+            namespace
+            {
+                std::string timestamp(time pt)
+                {
+                    using namespace boost::posix_time;
+                    using namespace boost::gregorian;
+
+                    time epoch( boost::gregorian::date(1970, 1, 1));
+                    auto x = (pt - epoch).total_seconds();
+                    auto t = time_t(x);
+
+                    char str[20];
+                    if(std::strftime(str, sizeof(str), "%b %d %I:%M:%S", std::localtime(&t))) 
+                        return std::string(str);
+
+                    return "";
+                }
+            }
 
             muda_widget::muda_widget(
                     dbo::Session& s,
@@ -88,6 +110,7 @@ namespace mempko
                     (bind(&muda_widget::delete_pressed, this));
 
                 //type button
+                _date = new w::WLabel{""};
                 _type = new w::WLabel{"now"};
                 _type->clicked().connect
                     (bind(&muda_widget::type_pressed, this));
@@ -99,6 +122,7 @@ namespace mempko
                 _layout->setSpacing(8);
                 _layout->addWidget(_edit);
                 _layout->setStretchFactor(_edit, 1);
+                _layout->addWidget(_date);
                 _layout->addWidget(_type);
                 _layout->addWidget(_delete_button);
                 _layout->setContentsMargins(0,0,0,0);
@@ -116,6 +140,7 @@ namespace mempko
                 ENSURE(_layout);
                 ENSURE(_delete_button);
                 ENSURE(_type);
+                ENSURE(_date);
             }
 
             void muda_widget::text_changed()
@@ -157,13 +182,16 @@ namespace mempko
                 INVARIANT(_muda);
 
                 _edit->setText(_muda->text());
+                update_date();
             }
 
             void muda_widget::show_buttons()
             {
                 INVARIANT(_delete_button);
                 INVARIANT(_type);
+                INVARIANT(_date);
 
+                _date->setHidden(false);
                 _delete_button->setHidden(false);
                 _type->setHidden(false);
             }
@@ -172,7 +200,9 @@ namespace mempko
             {
                 INVARIANT(_delete_button);
                 INVARIANT(_type);
+                INVARIANT(_date);
 
+                _date->setHidden(true);
                 _delete_button->setHidden(true);
                 _type->setHidden(true);
             }
@@ -209,11 +239,13 @@ namespace mempko
             {
                 INVARIANT(_muda);
                 INVARIANT(_type);
+                INVARIANT(_date);
 
                 switch(_muda->type().state())
                 {
                     case NOW: 
                         _type->setStyleClass("btn muda-now-button");
+                        _date->setStyleClass("timestamp muda-now");
 
                         if(_dirty) _edit->setStyleClass("dirty muda-now");
                         else  _edit->setStyleClass("muda-now");
@@ -221,6 +253,7 @@ namespace mempko
                         break;
                     case LATER: 
                         _type->setStyleClass("btn muda-later-button");
+                        _date->setStyleClass("timestamp muda-later");
 
                         if(_dirty) _edit->setStyleClass("dirty muda-later");
                         else _edit->setStyleClass("muda-later");
@@ -228,6 +261,7 @@ namespace mempko
                         break;
                     case DONE: 
                         _type->setStyleClass("btn muda-done-button");
+                        _date->setStyleClass("timestamp muda-done");
 
                         if(_dirty) _edit->setStyleClass("dirty muda-done");
                         else _edit->setStyleClass("muda-done");
@@ -235,11 +269,21 @@ namespace mempko
                         break;
                     case NOTE: 
                         _type->setStyleClass("btn muda-note-button");
+                        _date->setStyleClass("timestamp muda-note");
 
                         if(_dirty) _edit->setStyleClass("dirty muda-note");
                         else _edit->setStyleClass("muda-note");
                         break;
                 }
+            }
+
+            void muda_widget::update_date()
+            {
+                INVARIANT(_date);
+                INVARIANT(_muda);
+
+                auto date = std::max(_muda->modified(), _muda->type().modified());
+                _date->setText(timestamp(date));
             }
 
             void muda_widget::update_type()
@@ -263,6 +307,7 @@ namespace mempko
                         break;
                 }
 
+                update_date();
                 set_style();
             }
         }

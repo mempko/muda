@@ -139,6 +139,11 @@
     color: red;
 }
 
+.timestamp {
+    color: grey;
+    font-size: 0.8em;
+}
+
 .Wt-auth-logged-in {
     text-align: right;
 }
