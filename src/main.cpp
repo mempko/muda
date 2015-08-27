@@ -413,7 +413,7 @@ WContainerWidget* app::create_menu()
     note->clicked().connect (std::bind(&app::note_view, this));
 
 
-    std::vector<WLabel*> menu = { all, triage, now, later, done, note, settings, logout};
+    std::vector<WLabel*> menu = { triage, now, later, done, note};
 
     auto tabs = new WContainerWidget;
     auto layout = new WHBoxLayout;
