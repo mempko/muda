@@ -6,13 +6,10 @@
 
 namespace mempko { namespace dci {
 
-    template <class concrete_derived>
-        class methodful_role 
-        {
-            protected:
-                const concrete_derived* self() const { return static_cast<const concrete_derived*>(this);}
-                concrete_derived* self() { return static_cast<concrete_derived*>(this);}
-        };
+#define ADD_SELF(t) \
+    t* const self() { return static_cast<t*>(this);} \
+    const t* self() const { return static_cast<const t*>(this);} 
+
 
 }}//namespace
 

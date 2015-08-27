@@ -1,4 +1,4 @@
-include_directories(core)
+include_directories(.)
 
 add_executable(
     muda 

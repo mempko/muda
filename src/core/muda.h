@@ -1,18 +1,23 @@
 #ifndef MEMPKO_MUDA_H
 #define MEMPKO_MUDA_H
 
+#include <list>
+
+#include <boost/shared_ptr.hpp>
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/list.hpp>
 
-#include "types.h"
-#include "roles.h"
+#include "core/types.h"
+#include "core/roles.h"
 
 namespace mempko { namespace muda { namespace model { 
 
-	class muda : public role::modifable_text_and_notify<muda>
+	class muda : 
+        public role::modifable_text_and_notify<muda>,
+        public role::simple_id_reciever<muda>
     {
         public:
             const text_type& text() const { return _text;}
@@ -27,6 +32,31 @@ namespace mempko { namespace muda { namespace model {
                 {
                     ar & make_nvp("text", _text);
                 }
+    };
+
+    typedef boost::shared_ptr<muda> muda_ptr;
+    typedef std::list<muda_ptr> muda_ptr_list;
+
+    class muda_list : 
+        public role::iterable_with_list<muda_list, muda_ptr_list>,
+        public role::appendable_object_sink_and_notifier<muda_list,muda_ptr>
+    {
+        public:
+            typedef muda_ptr_list list_type;
+            typedef list_type::iterator iterator;
+            typedef list_type::const_iterator const_iterator;
+
+            list_type& list() { return _list;}
+            const list_type& list() const { return _list;}
+
+            iterator begin() { return _list.begin();}
+            iterator end() { return _list.end();}
+            const_iterator begin() const { return _list.begin();}
+            const_iterator end() const { return _list.end();}
+
+            list_type::size_type size() const { return _list.size();}
+        private:
+            list_type _list;
     };
 
     class text_value : public role::modifable_text_and_notify<text_value>

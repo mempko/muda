@@ -5,8 +5,9 @@
 #include <Wt/WPushButton>
 #include <Wt/WText>
 
-#include "muda.h"
-#include "context.h"
+#include <list>
+#include "core/muda.h"
+#include "core/context.h"
 
 using namespace Wt;
 
@@ -50,15 +51,21 @@ app::app(const WEnvironment& env) : WApplication(env)
 void app::update_text_display(const mm::muda& muda)
 {
 	_echo->setText(Wt::WString("change_text:") + muda.text());
+    std::cout << "id: " << muda.id() << std::endl;
 }
 
 void app::change_text()
 {
-    mm::muda muda;
+    mm::muda_list mudas;
+    mm::muda_ptr muda(new mm::muda);
 
-	muda.when_changed(boost::bind(boost::mem_fn(&app::update_text_display), this, _1));
+    mc::add_object<mm::muda,mm::muda_ptr,mm::muda_list> add(muda, mudas);
+    add();
+    std::cout << "total mudas: " << mudas.size() << std::endl;
 
-    mc::modify_text_context<mm::muda> change_muda_text(muda, _task->text());
+	muda->when_text_changes(boost::bind(boost::mem_fn(&app::update_text_display), this, _1));
+
+    mc::modify_text_context<mm::muda> change_muda_text(*muda, _task->text());
 
     change_muda_text();
 }
