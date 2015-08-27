@@ -30,15 +30,15 @@ namespace mempko
             muda_list_widget::muda_list_widget(
                     dbo::Session& s,
                     model::muda_list_dptr mudas, 
-                    muda_list_widget::filter_func filter, 
+                    muda_list_widget::mutate_func mut, 
                     w::WContainerWidget* parent) :
                 w::WCompositeWidget{parent},
-                _mudas{mudas}, _filter{filter}, _session{s}
+                _mudas{mudas}, _session{s}
             {
                 REQUIRE(parent);
 
                 setImplementation(_root = new w::WContainerWidget);
-                create_ui();
+                create_ui(mut);
             }
 
             muda_list_widget::~muda_list_widget()
@@ -52,30 +52,22 @@ namespace mempko
                 _connections.clear();
             }
 
-            void muda_list_widget::create_ui()
+            void muda_list_widget::create_ui(muda_list_widget::mutate_func mut)
             {
                 dbo::Transaction t{_session};
                 _root->resize(w::WLength(100, w::WLength::Percentage), w::WLength::Auto);
 
                 const auto& list = _mudas->list();
 
-                auto ordered_list = std::vector<model::muda_dptr>{std::begin(list), std::end(list)};
+                auto vec = muda_vec{std::begin(list), std::end(list)};
+                mut(vec);
 
-                std::sort(std::begin(ordered_list), std::end(ordered_list), 
-                        [](const auto& a, const auto& b)
-                        { 
-                            return a->id() < b->id();
-                        });
-
-                for(const auto& m : ordered_list) add_muda(m);
+                for(const auto& m : vec) add_muda(m);
             }
 
             void muda_list_widget::add_muda(model::muda_dptr muda)
             {
                 REQUIRE(muda);
-
-                //do not add if it does not pass filter
-                if(!_filter(muda)) return;
 
                 _connections.push_back(muda.modify()->when_text_changes(bind(&muda_list_widget::fire_update_sig, this)));
 

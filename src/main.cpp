@@ -51,6 +51,13 @@ namespace mt = mempko::muda::wt;
 using connections = std::list<boost::signals2::connection>;
 using optional_regex = boost::optional<boost::regex>;
 
+void muda_list_sort(mt::muda_vec& v)
+{
+    std::sort(std::begin(v), std::end(v), 
+            [](const auto& a, const auto& b) { return a->id() < b->id();});
+}
+
+
 class app : public WApplication
 {
     public:
@@ -88,6 +95,11 @@ class app : public WApplication
         bool filter_by_later(mm::muda_dptr muda);
         bool filter_by_done(mm::muda_dptr muda);
         bool filter_by_note(mm::muda_dptr muda);
+        void make_now_view(mt::muda_vec&);
+        void make_later_view(mt::muda_vec&);
+        void make_done_view(mt::muda_vec&);
+        void make_note_view(mt::muda_vec&);
+        void make_prioritize_view(mt::muda_vec&);
         void set_search();
         void clear_search();
 
@@ -219,20 +231,14 @@ void app::triage_view()
     setup_view();
 
     //create muda list widget
-    auto now = new mt::muda_list_widget{_session->dbs(), _mudas, 
-            std::bind(&app::filter_by_now, this, ph::_1), root()};
-    auto later = new mt::muda_list_widget{_session->dbs(), _mudas, 
-            std::bind(&app::filter_by_later, this, ph::_1), root()};
-    auto done = new mt::muda_list_widget{_session->dbs(), _mudas, 
-            std::bind(&app::filter_by_done, this, ph::_1), root()};
+    auto triage = new mt::muda_list_widget{_session->dbs(), _mudas, 
+            std::bind(&app::make_prioritize_view, this, ph::_1), root()};
 
-    _connections.push_back(now->when_model_updated(std::bind(&app::save_mudas, this)));
-    _connections.push_back(later->when_model_updated(std::bind(&app::save_mudas, this)));
-    _connections.push_back(done->when_model_updated(std::bind(&app::save_mudas, this)));
+    _connections.push_back(triage->when_model_updated(std::bind(&app::save_mudas, this)));
 
     //add muda when enter is pressed
     _new_muda->enterPressed().connect(
-            std::bind(&app::add_new_triage_muda, this, now));
+            std::bind(&app::add_new_triage_muda, this, triage));
 }
 
 void app::now_view()
@@ -244,7 +250,7 @@ void app::now_view()
 
     //create muda list widget
     auto list_widget = new mt::muda_list_widget{_session->dbs(), _mudas, 
-            std::bind(&app::filter_by_now, this, ph::_1), root()};
+            std::bind(&app::make_now_view, this, ph::_1), root()};
 
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
 
@@ -262,7 +268,7 @@ void app::later_view()
 
     //create muda list widget
     auto list_widget = new mt::muda_list_widget{_session->dbs(), _mudas, 
-            std::bind(&app::filter_by_later, this, ph::_1), root()};
+            std::bind(&app::make_later_view, this, ph::_1), root()};
 
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
 
@@ -278,7 +284,7 @@ void app::done_view()
 
     //create muda list widget
     auto list_widget = new mt::muda_list_widget{_session->dbs(), _mudas, 
-            std::bind(&app::filter_by_done, this, ph::_1), root()};
+            std::bind(&app::make_done_view, this, ph::_1), root()};
 
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
 
@@ -294,7 +300,7 @@ void app::note_view()
 
     //create muda list widget
     auto list_widget = new mt::muda_list_widget{_session->dbs(), _mudas, 
-            std::bind(&app::filter_by_note, this, ph::_1), root()};
+            std::bind(&app::make_note_view, this, ph::_1), root()};
 
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
 
@@ -485,6 +491,56 @@ bool app::filter_by_note(mm::muda_dptr muda)
 {
     REQUIRE(muda);
     return muda->type().state() == m::NOTE && filter_by_search(muda);
+}
+
+void app::make_now_view(mt::muda_vec& v)
+{
+    //filter
+    v.erase(std::remove_if(v.begin(), v.end(),
+                [&](auto muda) { return !this->filter_by_now(muda);}), v.end());
+    muda_list_sort(v);
+}
+
+void app::make_later_view(mt::muda_vec& v)
+{
+    //filter
+    v.erase(std::remove_if(v.begin(), v.end(),
+                [&](auto muda) { return !this->filter_by_later(muda);}), v.end());
+    muda_list_sort(v);
+}
+
+void app::make_done_view(mt::muda_vec& v)
+{
+    //filter
+    v.erase(std::remove_if(v.begin(), v.end(),
+                [&](auto muda) { return !this->filter_by_done(muda);}), v.end());
+    muda_list_sort(v);
+}
+
+void app::make_note_view(mt::muda_vec& v)
+{
+    //filter
+    v.erase(std::remove_if(v.begin(), v.end(),
+                [&](auto muda) { return !this->filter_by_note(muda);}), v.end());
+    muda_list_sort(v);
+}
+
+void app::make_prioritize_view(mt::muda_vec& v)
+{
+    //filter
+    v.erase(std::remove_if(v.begin(), v.end(),
+                [&](auto muda) 
+                { 
+                    return muda->type().state() == m::NOTE || !this->filter_by_search(muda);
+                }), 
+            v.end());
+
+    muda_list_sort(v);
+
+    //put done first, then later, then now
+    //This order is important because it will show up in reverse when added to the muda list
+    auto done_end = std::stable_partition(v.begin(), v.end(), [](auto m){ return m->type().state() == m::DONE;});
+    std::stable_partition(done_end, v.end(), [](auto m){ return m->type().state() == m::LATER;});
 }
 
 mm::muda_dptr app::add_new_muda()

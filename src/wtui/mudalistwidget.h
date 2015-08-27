@@ -37,15 +37,16 @@ namespace mempko
         { 
 
             typedef std::list<boost::signals2::connection> connections;
+            using muda_vec = std::vector<model::muda_dptr>;
 
             class muda_list_widget : public Wt::WCompositeWidget
             {
                 public:
-                    typedef boost::function<bool (model::muda_dptr)> filter_func;
+                    typedef boost::function<void (muda_vec&)> mutate_func;
                     muda_list_widget(
                             dbo::Session& s,
                             model::muda_list_dptr mudas, 
-                            filter_func filter, 
+                            mutate_func mut, 
                             Wt::WContainerWidget* parent = 0);
                     ~muda_list_widget();
 
@@ -63,13 +64,12 @@ namespace mempko
                     void add_muda(model::muda_dptr muda);
 
                 private:
-                    void create_ui();
+                    void create_ui(mutate_func);
                     void remove_muda(id_type id, muda_widget* widget);
                     void fire_update_sig();
                     void clear_connections();
 
                 private:
-                    filter_func _filter;
                     model::muda_list_dptr _mudas;
                     muda_widget_list _muda_widgets;
                     update_sig _update_sig;
