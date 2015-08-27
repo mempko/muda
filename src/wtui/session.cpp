@@ -85,6 +85,11 @@ namespace mempko
                 t.commit();
             }
 
+            void session::logout()
+            {
+                _login.logout();
+            }
+
             model::user_dptr session::user() const
             {
                 REQUIRE(_login.loggedIn());

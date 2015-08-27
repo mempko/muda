@@ -72,6 +72,7 @@ class app : public WApplication
         void startup_muda_screen();
         void setup_view();
         void create_header_ui();
+        void logout();
         void triage_view();
         void now_view();
         void later_view();
@@ -223,6 +224,11 @@ void app::triage_view()
     //add muda when enter is pressed
     _new_muda->enterPressed().connect(
             std::bind(&app::add_new_triage_muda, this, triage));
+}
+
+void app::logout()
+{
+    _session->logout();
 }
 
 void app::now_view()
@@ -386,7 +392,9 @@ WContainerWidget* app::create_menu()
     //setup settings buttons
     auto settings = create_small_label("&#128100;", "sbtn muda-settings-button");
     settings->setToolTip("settings");
+
     auto logout = create_small_label("&#59201;", "sbtn muda-settings-button");
+    logout->clicked().connect (std::bind(&app::logout, this));
     logout->setToolTip("logout");
 
     std::vector<WLabel*> small_menu = { settings, logout};
