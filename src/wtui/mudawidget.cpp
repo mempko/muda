@@ -56,6 +56,9 @@ namespace mempko
                 INVARIANT(_muda);
                 INVARIANT(_root);
 
+                implementStateless(&muda_widget::show_buttons, &muda_widget::hide_buttons);
+
+
                 //create text editor
                 _edit = new w::WLineEdit;
                 //set text to muda text
@@ -72,7 +75,7 @@ namespace mempko
                         bind(&muda_widget::update_type, this));
 
                 //delete button
-                _deleteButton = new w::WLabel{"x"};
+                _deleteButton = new w::WLabel{"&#10060;"};
                 _deleteButton->setStyleClass("btn muda-delete");
                 _deleteButton->doubleClicked().connect
                     (bind(&muda_widget::delete_pressed, this));
@@ -96,9 +99,6 @@ namespace mempko
                 _root->setLayout(_layout);
                 _root->setStyleClass("muda-container");
                 _root->resize(w::WLength(100, w::WLength::Percentage), w::WLength::Auto);
-
-                implementStateless(&muda_widget::show_buttons);
-                implementStateless(&muda_widget::hide_buttons);
 
                 _root->mouseWentOver().connect
                     (bind(&muda_widget::show_buttons, this));

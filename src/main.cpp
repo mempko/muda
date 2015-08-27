@@ -406,6 +406,9 @@ void app::create_header_ui()
 {
     INVARIANT(root());
 
+    auto entypo = new WText{"<link rel='stylesheet' href='/resources/fonts/entypo.css'>", Wt::XHTMLUnsafeText};
+    root()->addWidget(entypo);
+
     auto menu = create_menu();
 
     root()->addWidget(menu);

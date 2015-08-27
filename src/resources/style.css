@@ -81,8 +81,21 @@
 	font-family:tahoma, arial, sans-serif;
 }
 
+.sbtn {
+	float: left;
+	height: 20px;
+	background: url(images/btn_stretch.png) repeat-x left top;
+	padding: 3px;
+	color: white;
+	font-size: 1em;
+	text-decoration: none;
+    text-align: center;
+	font-family:tahoma, arial, sans-serif;
+}
+
 .muda-delete {
 	background-color:#8A0808;
+	font-family:entypo;
 }
 .muda-all-button {
 	background-color:#084B8A;
@@ -99,6 +112,16 @@
 .muda-note-button {
 	background-color:#A4A4A4;
 }
+
+.muda-settings-button {
+	background-repeat:repeat-x;
+	border:1px solid #d1c7ac;
+	color:#333333;
+	padding:3px;
+	font-family:entypo;
+    font-size: 15px;
+}
+
 
 .Wt-auth-logged-in {
     text-align: right;
