@@ -336,6 +336,7 @@ void app::create_header_ui()
 }
 
 void app::set_search()
+try
 {
     BOOST_ASSERT(_new_muda);
     BOOST_ASSERT(_new_muda->text().value().size() > 0);
@@ -344,6 +345,10 @@ void app::set_search()
     std::wstring regex = anyChar + search + anyChar;
     boost::wregex e(regex);
     _set_search = boost::make_optional(e);
+}
+catch(std::exception& e)
+{
+    std::cerr << "regex error" << e.what() << std::endl;
 }
 
 void app::clear_search()
