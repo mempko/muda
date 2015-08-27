@@ -15,6 +15,7 @@ namespace mempko { namespace muda { namespace role {
         {
             public:
                 virtual void change(const value&) = 0;
+                virtual ~modifiable_object(){}
         };
 
     template <class m>
@@ -44,6 +45,7 @@ namespace mempko { namespace muda { namespace role {
         {
             public:
                 virtual void recieve(id_type id) = 0;
+                virtual ~id_reciever(){}
         };
 
     template<class m>
@@ -68,6 +70,7 @@ namespace mempko { namespace muda { namespace role {
                 virtual iterator end() = 0; 
                 virtual const_iterator begin() const  = 0;
                 virtual const_iterator end() const = 0; 
+                virtual ~iterable(){}
         };
 
     template<class list, class list_type>
@@ -88,6 +91,7 @@ namespace mempko { namespace muda { namespace role {
         {
             public:
                 virtual bool add(object& obj) = 0;
+                virtual ~appendable_container(){}
         };
 
     template<class container, class object>
@@ -115,6 +119,7 @@ namespace mempko { namespace muda { namespace role {
         {
             public:
                 virtual bool remove(handle m) = 0;
+                virtual ~removable_container(){}
         };
 
     template<class container, class object_ptr, class id>
@@ -156,6 +161,7 @@ namespace mempko { namespace muda { namespace role {
     {
         public:
             virtual void transition() = 0;
+            virtual ~transitional_object(){}
     };
 
     template<class type>
