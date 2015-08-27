@@ -43,7 +43,7 @@ namespace mempko { namespace muda { namespace wt {
         //delete button
         _deleteButton = new w::WLabel("x");
         _deleteButton->setStyleClass("btn muda-delete");
-        _deleteButton->clicked().connect
+        _deleteButton->doubleClicked().connect
             (bind(&muda_widget::delete_pressed, this));
 
         //type button
@@ -55,18 +55,16 @@ namespace mempko { namespace muda { namespace wt {
 
         //layout
         _layout = new w::WHBoxLayout();
-        _layout->setSpacing(0);
+        _layout->setSpacing(5);
         _layout->addWidget(_edit);
-        _layout->addSpacing(w::WLength(6, w::WLength::Pixel));
-        _layout->addWidget(_type);
-        _layout->addSpacing(w::WLength(2, w::WLength::Pixel));
-        _layout->addWidget(_deleteButton);
         _layout->setStretchFactor(_edit, 1);
+        _layout->addWidget(_type);
+        _layout->addWidget(_deleteButton);
         _layout->setContentsMargins(0,0,0,0);
 
         _root->setLayout(_layout);
         _root->setStyleClass("muda-container");
-        _root->resize(w::WLength(99, w::WLength::Percentage), w::WLength::Auto);
+        _root->resize(w::WLength(100, w::WLength::Percentage), w::WLength::Auto);
 
         _root->mouseWentOver().connect
             (bind(&muda_widget::show_buttons, this));

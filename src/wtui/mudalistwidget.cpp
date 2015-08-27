@@ -17,6 +17,8 @@ namespace mempko { namespace muda { namespace wt {
 
     void muda_list_widget::create_ui()
     {
+        _root->resize(w::WLength(100, w::WLength::Percentage), w::WLength::Auto);
+
         std::for_each(_mudas.begin(), _mudas.end(),
             bind(mem_fn(&muda_list_widget::add_muda), this, _1));
     }

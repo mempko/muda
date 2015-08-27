@@ -1,7 +1,7 @@
 .new-muda {
     border: 2px dashed #D1C7AC;
 	margin-bottom:4px;
-	padding:2px;
+	padding:3px;
 }
 
 .muda-container {
@@ -27,6 +27,7 @@
 	padding:3px;
 	font-family:tahoma, arial, sans-serif;
 }
+
 .muda-later {
     background-image:url(images/muda_bg_later.jpg);
 	background-repeat:repeat-x;
@@ -55,9 +56,13 @@
 	font-family:tahoma, arial, sans-serif;
 }
 
+.menu-container {
+	margin-bottom:8px;
+}
+
 .btn {
 	float: left;
-	height: 40px;
+	height: 20px;
 	background: url(images/btn_stretch.png) repeat-x left top;
 	padding: 3px;
 	color: #fff;
@@ -70,7 +75,9 @@
 .muda-delete {
 	background-color:#8A0808;
 }
-
+.muda-all-button {
+	background-color:#084B8A;
+}
 .muda-now-button {
 	background-color:#088A08;
 }
@@ -80,7 +87,6 @@
 .muda-done-button {
 	background-color:#2E2E2E;
 }
-
 .muda-note-button {
 	background-color:#A4A4A4;
 }
