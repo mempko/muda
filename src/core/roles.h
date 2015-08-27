@@ -318,6 +318,7 @@ namespace mempko
                         using namespace boost::posix_time;
 
                         auto now = second_clock::local_time();
+                        self()->modified(now);
                         self()->created(now);
                     }
             };
