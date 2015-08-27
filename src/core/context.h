@@ -57,8 +57,8 @@ namespace mempko { namespace muda { namespace context {
         class add_object
         {
             public:
-            add_object(m_ptr m, list& list) : 
-                _m(m), _list(list) 
+            add_object(m_ptr mp, list& l) : 
+                _m(mp), _list(l) 
             {
                 BOOST_ASSERT(_m);
             }
