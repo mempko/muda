@@ -20,6 +20,14 @@ namespace mm = mempko::muda::model;
 namespace mc = mempko::muda::context;
 namespace mt = mempko::muda::wt;
 
+typedef std::list<boost::signals2::connection> connections;
+
+bool filter_by_all(mm::muda_ptr muda);
+bool filter_by_now(mm::muda_ptr muda);
+bool filter_by_later(mm::muda_ptr muda);
+bool filter_by_done(mm::muda_ptr muda);
+bool filter_by_note(mm::muda_ptr muda);
+
 class app : public WApplication
 {
     public:
@@ -29,6 +37,7 @@ class app : public WApplication
         void startup_muda_screen();
         void create_header_ui();
         void all_view();
+        void triage_view();
         void now_view();
         void later_view();
         void done_view();
@@ -42,19 +51,14 @@ class app : public WApplication
         mm::muda_ptr add_new_muda();
         void add_muda_to_list_widget(mm::muda_ptr muda, mt::muda_list_widget*);
     private:
-        bool filter_by_all(mm::muda_ptr muda);
-        bool filter_by_now(mm::muda_ptr muda);
-        bool filter_by_later(mm::muda_ptr muda);
-        bool filter_by_done(mm::muda_ptr muda);
-        bool filter_by_note(mm::muda_ptr muda);
-    private:
+        void clear_connections();
         void save_mudas();
         void load_mudas();
     private:
         //login widgets
         WLineEdit* _muda_file_edit;
         std::string _muda_file;
-        boost::signals2::connection _when_model_updated_connection;
+        connections _connections;
     private:
         //muda widgets
         WLineEdit* _new_muda;
@@ -97,28 +101,47 @@ void app::startup_muda_screen()
 
 void app::all_view()
 {
-    _when_model_updated_connection.disconnect();
+    clear_connections();
     root()->clear();
     create_header_ui();
 
     //create muda list widget
-    mt::muda_list_widget* list_widget = new mt::muda_list_widget(_mudas, bind(&app::filter_by_all, this, _1), root());
-    _when_model_updated_connection = list_widget->when_model_updated(bind(&app::save_mudas, this));
+    mt::muda_list_widget* list_widget = new mt::muda_list_widget(_mudas, filter_by_all, root());
+    _connections.push_back(list_widget->when_model_updated(bind(&app::save_mudas, this)));
     //add muda when enter is pressed
     _new_muda->enterPressed().connect
         (bind(&app::add_new_now_muda, this, list_widget));
 
 }
 
-void app::now_view()
+void app::triage_view()
 {
-    _when_model_updated_connection.disconnect();
+    clear_connections();
     root()->clear();
     create_header_ui();
 
     //create muda list widget
-    mt::muda_list_widget* list_widget = new mt::muda_list_widget(_mudas, bind(&app::filter_by_now, this, _1), root());
-    _when_model_updated_connection = list_widget->when_model_updated(bind(&app::save_mudas, this));
+    mt::muda_list_widget* now = new mt::muda_list_widget(_mudas, filter_by_now, root());
+    mt::muda_list_widget* later = new mt::muda_list_widget(_mudas, filter_by_later, root());
+    mt::muda_list_widget* done = new mt::muda_list_widget(_mudas, filter_by_done, root());
+    _connections.push_back(now->when_model_updated(bind(&app::save_mudas, this)));
+    _connections.push_back(later->when_model_updated(bind(&app::save_mudas, this)));
+    _connections.push_back(done->when_model_updated(bind(&app::save_mudas, this)));
+
+    //add muda when enter is pressed
+    _new_muda->enterPressed().connect
+        (bind(&app::add_new_now_muda, this, now));
+}
+
+void app::now_view()
+{
+    clear_connections();
+    root()->clear();
+    create_header_ui();
+
+    //create muda list widget
+    mt::muda_list_widget* list_widget = new mt::muda_list_widget(_mudas, filter_by_now, root());
+    _connections.push_back(list_widget->when_model_updated(bind(&app::save_mudas, this)));
 
     //add muda when enter is pressed
     _new_muda->enterPressed().connect
@@ -127,13 +150,13 @@ void app::now_view()
 
 void app::later_view()
 {
-    _when_model_updated_connection.disconnect();
+    clear_connections();
     root()->clear();
     create_header_ui();
 
     //create muda list widget
-    mt::muda_list_widget* list_widget = new mt::muda_list_widget(_mudas, bind(&app::filter_by_later, this, _1), root());
-    _when_model_updated_connection = list_widget->when_model_updated(bind(&app::save_mudas, this));
+    mt::muda_list_widget* list_widget = new mt::muda_list_widget(_mudas, filter_by_later, root());
+    _connections.push_back(list_widget->when_model_updated(bind(&app::save_mudas, this)));
 
     //add muda when enter is pressed
     _new_muda->enterPressed().connect
@@ -143,13 +166,13 @@ void app::later_view()
 
 void app::done_view()
 {
-    _when_model_updated_connection.disconnect();
+    clear_connections();
     root()->clear();
     create_header_ui();
 
     //create muda list widget
-    mt::muda_list_widget* list_widget = new mt::muda_list_widget(_mudas, bind(&app::filter_by_done, this, _1), root());
-    _when_model_updated_connection = list_widget->when_model_updated(bind(&app::save_mudas, this));
+    mt::muda_list_widget* list_widget = new mt::muda_list_widget(_mudas, filter_by_done, root());
+    _connections.push_back(list_widget->when_model_updated(bind(&app::save_mudas, this)));
 
     //add muda when enter is pressed
     _new_muda->enterPressed().connect
@@ -158,17 +181,27 @@ void app::done_view()
 
 void app::note_view()
 {
-    _when_model_updated_connection.disconnect();
+    clear_connections();
     root()->clear();
     create_header_ui();
 
     //create muda list widget
-    mt::muda_list_widget* list_widget = new mt::muda_list_widget(_mudas, bind(&app::filter_by_note, this, _1), root());
-    _when_model_updated_connection = list_widget->when_model_updated(bind(&app::save_mudas, this));
+    mt::muda_list_widget* list_widget = new mt::muda_list_widget(_mudas, filter_by_note, root());
+    _connections.push_back(list_widget->when_model_updated(bind(&app::save_mudas, this)));
 
     //add muda when enter is pressed
     _new_muda->enterPressed().connect
         (bind(&app::add_new_note_muda, this, list_widget));
+}
+
+void clear_connection(boost::signals2::connection& c)
+{
+    c.disconnect();
+}
+
+void app::clear_connections()
+{
+    std::for_each(_connections.begin(), _connections.end(), clear_connection);
 }
 
 void app::save_mudas()
@@ -201,6 +234,9 @@ WContainerWidget* app::create_menu()
     WLabel* all = create_menu_label("all", "btn muda-all-button");
     all->clicked().connect (bind(&app::all_view, this));
 
+    WLabel* triage = create_menu_label("triage", "btn muda-all-button");
+    triage->clicked().connect (bind(&app::triage_view, this));
+
     WLabel* now = create_menu_label("now", "btn muda-now-button");
     now->clicked().connect (bind(&app::now_view, this));
 
@@ -213,7 +249,7 @@ WContainerWidget* app::create_menu()
     WLabel* note = create_menu_label("note", "btn muda-note-button");
     note->clicked().connect (bind(&app::note_view, this));
 
-    WLabel* menu[] = { all, now, later, done, note};
+    WLabel* menu[] = { all, triage, now, later, done, note};
     unsigned int total = 5;
     unsigned int last = total - 1;
 
@@ -257,30 +293,30 @@ void app::create_header_ui()
     root()->addWidget(container);
 }
 
-bool app::filter_by_all(mm::muda_ptr muda)
+bool filter_by_all(mm::muda_ptr muda)
 {
     return true;
 }
 
-bool app::filter_by_now(mm::muda_ptr muda)
+bool filter_by_now(mm::muda_ptr muda)
 {
     BOOST_ASSERT(muda);
     return muda->type().state() == m::NOW;
 }
 
-bool app::filter_by_later(mm::muda_ptr muda)
+bool filter_by_later(mm::muda_ptr muda)
 {
     BOOST_ASSERT(muda);
     return muda->type().state() == m::LATER;
 }
 
-bool app::filter_by_done(mm::muda_ptr muda)
+bool filter_by_done(mm::muda_ptr muda)
 {
     BOOST_ASSERT(muda);
     return muda->type().state() == m::DONE;
 }
 
-bool app::filter_by_note(mm::muda_ptr muda)
+bool filter_by_note(mm::muda_ptr muda)
 {
     BOOST_ASSERT(muda);
     return muda->type().state() == m::NOTE;
