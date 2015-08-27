@@ -71,6 +71,7 @@ namespace mempko { namespace muda { namespace context {
                 BOOST_ASSERT(sink);
 
                 set_id();
+                _m->stamp();
                 sink->add(_m);
             }
 

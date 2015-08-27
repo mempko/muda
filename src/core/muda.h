@@ -5,11 +5,12 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <boost/archive/xml_oarchive.hpp>
 #include <boost/archive/xml_iarchive.hpp>
-#include <boost/serialization/utility.hpp>
+#include <boost/archive/xml_oarchive.hpp>
 #include <boost/serialization/list.hpp>
 #include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/version.hpp>
 
 #include "core/types.h"
 #include "core/roles.h"
@@ -18,7 +19,8 @@
 namespace mempko { namespace muda { namespace model { 
 
     class muda_type : 
-        public role::transitional_state_and_notify<muda_type>
+        public role::transitional_state_and_notify<muda_type>,
+        public role::ptime_stampable_when_modified<muda_type>
     {
         public:
             muda_type() : _state(NOW) {}
@@ -32,8 +34,11 @@ namespace mempko { namespace muda { namespace model {
             void done() { _state = DONE;}
             void note() { _state = NOTE;}
 
+            time modified() const { return _modified;}
+            void modified(const time& t) { _modified = t;}
         private:
             muda_state _state;
+            time _modified;
 
         private:
             friend class boost::serialization::access;
@@ -42,12 +47,15 @@ namespace mempko { namespace muda { namespace model {
                 {
                     using namespace boost::serialization;
                     ar & make_nvp("state", _state);
+                    ar & make_nvp("modified", _modified);
                 }
     };
 
 	class muda : 
         public role::modifable_text_and_notify<muda>,
-        public role::simple_id_reciever<muda>
+        public role::simple_id_reciever<muda>,
+        public role::ptime_stampable_when_created<muda>,
+        public role::ptime_stampable_when_modified<muda>
     {
         public:
             muda() : _text(), _id(0), _type() {}
@@ -60,10 +68,18 @@ namespace mempko { namespace muda { namespace model {
             muda_type& type() {return _type;}
             const muda_type& type() const {return _type;}
 
+            time created() const { return _created;}
+            void created(const time& t) { _created = t;}
+
+            time modified() const { return _modified;}
+            void modified(const time& t) { _modified = t;}
+
         private:
             text_type _text;
             id_type _id;
             muda_type _type;
+            time _created;
+            time _modified;
 
         private:
 
@@ -75,6 +91,8 @@ namespace mempko { namespace muda { namespace model {
                     ar & make_nvp("id", _id);
                     ar & make_nvp("text", _text);
                     ar & make_nvp("type", _type);
+                    ar & make_nvp("created", _created);
+                    ar & make_nvp("modified", _modified);
                 }
     };
 
@@ -121,13 +139,18 @@ namespace mempko { namespace muda { namespace model {
     };
 
     class text_value : 
+        public role::ptime_stampable_when_modified<text_value>,
         public role::modifable_text_and_notify<text_value>
     {
         public:
             const text_type& text() const { return _text;}
             const void text(const text_type& t) { _text = t;}
+
+            time modified() const { return _modified;}
+            void modified(const time& t) { _modified = t;}
         private:
             text_type _text;
+            time _modified;
 
         private:
 
@@ -137,6 +160,7 @@ namespace mempko { namespace muda { namespace model {
                 {
                     using namespace boost::serialization;
                     ar & make_nvp("text", _text);
+                    ar & make_nvp("modified", _modified);
                 }
     };
 
@@ -177,4 +201,6 @@ namespace mempko { namespace muda { namespace context {
 
 }}}//namespace
 
+BOOST_CLASS_VERSION(mempko::muda::model::muda_type,1)
+BOOST_CLASS_VERSION(mempko::muda::model::muda,1)
 #endif
