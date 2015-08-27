@@ -21,12 +21,21 @@
 #include "core/types.h"
 #include "core/dbc.h"
 
+#include <algorithm>
+
 namespace mempko 
 { 
     namespace muda 
     { 
         namespace util 
         {
+            template<class Vec, class Predicate>
+                void filter(Vec& v, Predicate p)
+                {
+                    v.erase(std::remove_if(v.begin(), v.end(),
+                                [&](auto val) {return !p(val);}), v.end());
+                }
+
         }
     }
 }

@@ -47,6 +47,7 @@ namespace m = mempko::muda;
 namespace mm = mempko::muda::model;
 namespace mc = mempko::muda::context;
 namespace mt = mempko::muda::wt;
+namespace mu = mempko::muda::util;
 
 using connections = std::list<boost::signals2::connection>;
 using optional_regex = boost::optional<boost::regex>;
@@ -493,47 +494,39 @@ bool app::filter_by_note(mm::muda_dptr muda)
     return muda->type().state() == m::NOTE && filter_by_search(muda);
 }
 
+
 void app::make_now_view(mt::muda_vec& v)
 {
-    //filter
-    v.erase(std::remove_if(v.begin(), v.end(),
-                [&](auto muda) { return !this->filter_by_now(muda);}), v.end());
+    mu::filter(v, [&](auto muda) { return this->filter_by_now(muda);});
     muda_list_sort(v);
 }
 
 void app::make_later_view(mt::muda_vec& v)
 {
-    //filter
-    v.erase(std::remove_if(v.begin(), v.end(),
-                [&](auto muda) { return !this->filter_by_later(muda);}), v.end());
+    mu::filter(v, [&](auto muda) { return this->filter_by_later(muda);});
     muda_list_sort(v);
 }
 
 void app::make_done_view(mt::muda_vec& v)
 {
-    //filter
-    v.erase(std::remove_if(v.begin(), v.end(),
-                [&](auto muda) { return !this->filter_by_done(muda);}), v.end());
+    mu::filter(v, [&](auto muda) { return this->filter_by_done(muda);});
     muda_list_sort(v);
 }
 
 void app::make_note_view(mt::muda_vec& v)
 {
-    //filter
-    v.erase(std::remove_if(v.begin(), v.end(),
-                [&](auto muda) { return !this->filter_by_note(muda);}), v.end());
+    mu::filter(v, [&](auto muda) { return this->filter_by_note(muda);});
     muda_list_sort(v);
 }
 
 void app::make_prioritize_view(mt::muda_vec& v)
 {
     //filter
-    v.erase(std::remove_if(v.begin(), v.end(),
+    mu::filter(v,
                 [&](auto muda) 
                 { 
-                    return muda->type().state() == m::NOTE || !this->filter_by_search(muda);
-                }), 
-            v.end());
+                    return muda->type().state() != m::NOTE && this->filter_by_search(muda);
+                }); 
 
     muda_list_sort(v);
 
