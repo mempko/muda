@@ -318,7 +318,7 @@ void app::create_header_ui()
 void app::set_search()
 {
     BOOST_ASSERT(_new_muda);
-    BOOST_ASSERT(_new_muda->text().size() > 0);
+    BOOST_ASSERT(_new_muda->text().value().size() > 0);
     std::wstring anyChar(L".*");
     std::wstring search = _new_muda->text().value().substr(1);
     std::wstring regex = anyChar + search + anyChar;
