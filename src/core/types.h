@@ -28,7 +28,7 @@ namespace mempko
 { 
     namespace muda 
     {
-        typedef std::wstring text_type;
+        typedef std::string text_type;
         typedef long id_type;
         enum muda_state { NOW, LATER, DONE, NOTE};
 

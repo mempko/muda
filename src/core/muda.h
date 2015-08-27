@@ -33,15 +33,18 @@
 #include "core/roles.h"
 #include "core/context.h"
 
+#include <Wt/Dbo/Dbo>
+#include <Wt/Dbo/WtSqlTraits>
+
+namespace dbo = Wt::Dbo;
+#define LOCK boost::mutex::scoped_lock lll(this->mutex())
+
 namespace mempko 
 { 
     namespace muda 
     { 
         namespace model 
         { 
-
-#define LOCK boost::mutex::scoped_lock lll(this->mutex())
-
             class muda_type : 
                 public role::lockable,
                 public role::transitional_state<muda_type>,
@@ -60,7 +63,7 @@ namespace mempko
                     time modified() const { return _modified;}
                     void modified(const time& t) { LOCK; _modified = t;}
 
-                private:
+                public:
                     muda_state _state = NOW;
                     time _modified;
 
@@ -75,6 +78,32 @@ namespace mempko
                             ar & make_nvp("modified", _modified);
                         }
             };
+        }
+    }
+}
+
+namespace Wt {
+    namespace Dbo {
+
+         template <class Action>
+             void field(Action& action, mempko::muda::model::muda_type& t,
+                     const std::string& name, int size = -1)
+             {
+                 field(action, t._state, name + "_ts");
+                 field(action, t._modified, name + "_tm");
+             }
+    }
+}
+
+namespace mempko 
+{ 
+    namespace muda 
+    { 
+        namespace model 
+        { 
+
+            class muda_list;
+            using muda_list_dptr = dbo::ptr<muda_list>;
 
             class muda : 
                 public role::lockable,
@@ -107,6 +136,7 @@ namespace mempko
                     muda_type _type;
                     time _created;
                     time _modified;
+                    muda_list_dptr _list;
 
                 private:
                     friend class boost::serialization::access;
@@ -121,23 +151,38 @@ namespace mempko
                             ar & make_nvp("created", _created);
                             ar & make_nvp("modified", _modified);
                         }
+
+                public:
+                    template<class Action>
+                        void persist(Action& a)
+                        {
+                            namespace d = Wt::Dbo;
+                            dbo::field(a, _id, "mid");
+                            dbo::field(a, _text, "text");
+                            dbo::field(a, _created, "created");
+                            dbo::field(a, _modified, "modified");
+                            dbo::field(a, _type, "type");
+                            dbo::belongsTo(a, _list, "list");
+                        }
             };
 
-            typedef boost::shared_ptr<muda> muda_ptr;
-            typedef std::list<muda_ptr> muda_ptr_list;
+            using muda_dptr = dbo::ptr<muda>;
+            using muda_ptr_list = dbo::collection<muda_dptr>;
 
             class muda_list : 
                 public role::lockable,
                 public role::iterable_with_list<muda_list, muda_ptr_list>,
-                public role::appendable_container<muda_list,muda_ptr>,
-                public role::removable_container<muda_list, muda_ptr, id_type>
+                public role::appendable_container<muda_list, muda_dptr>,
+                public role::removable_container<muda_list, muda_dptr, id_type>
             {
+                public:
+                    const text_type& name() const { return _name;}
+                    text_type& name() { return _name;}
+
                 public:
                     typedef muda_ptr_list list_type;
                     typedef list_type::iterator iterator;
                     typedef list_type::const_iterator const_iterator;
-                    typedef list_type::reverse_iterator reverse_iterator;
-                    typedef list_type::const_reverse_iterator const_reverse_iterator;
 
                     list_type& list() { return _list;}
                     const list_type& list() const { return _list;}
@@ -146,15 +191,26 @@ namespace mempko
                     iterator end() { return _list.end();}
                     const_iterator begin() const { return _list.begin();}
                     const_iterator end() const { return _list.end();}
-                    reverse_iterator rbegin() { return _list.rbegin();}
-                    reverse_iterator rend() { return _list.rend();}
-                    const_reverse_iterator rbegin() const { return _list.rbegin();}
-                    const_reverse_iterator rend() const { return _list.rend();}
 
                     list_type::size_type size() const { return _list.size();}
 
+                    template <class pred>
+                    void remove_if(pred p)
+                    {
+                        for(auto c : _list)
+                        {
+                            if(p(c))
+                            {
+                                _list.erase(c);
+                                c.remove();
+                                break;
+                            }
+                        }
+                    }
+
                 private:
                     list_type _list;
+                    text_type _name;
 
                 private:
                     friend class boost::serialization::access;
@@ -165,47 +221,30 @@ namespace mempko
                             using namespace boost::serialization;
                             ar & make_nvp("mudas", _list);
                         }
-            };
 
-            class text_value : 
-                public role::lockable,
-                public role::ptime_stampable_when_modified<text_value>,
-                public role::modifable_text<text_value>
-            {
                 public:
-                    const text_type& text() const { return _text;}
-                    const void text(const text_type& t) { _text = t;}
-
-                    time modified() const { return _modified;}
-                    void modified(const time& t) { _modified = t;}
-
-                private:
-                    text_type _text;
-                    time _modified;
-
-                private:
-                    friend class boost::serialization::access;
-                    template<class Archive>
-                        void serialize(Archive & ar, const unsigned int version)
+                    template<class Action>
+                        void persist(Action& a)
                         {
-                            using namespace boost::serialization;
-                            ar & make_nvp("text", _text);
-                            ar & make_nvp("modified", _modified);
+                            dbo::field(a, _name, "name");
+                            dbo::hasMany(a, _list, dbo::ManyToOne, "list");
                         }
             };
+
+            using muda_list_dptr = dbo::ptr<muda_list>;
 
             class user
             {
                 public:
-                    const text_value& name() const { return _name;}
-                    text_value& name() { return _name;}
+                    const text_type& name() const { return _name;}
+                    text_type& name() { return _name;}
 
-                    const text_value& email() const { return _email;}
-                    text_value& email() { return _email;}
+                    const text_type& email() const { return _email;}
+                    text_type& email() { return _email;}
 
                 private:
-                    text_value _name;
-                    text_value _email;
+                    text_type _name;
+                    text_type _email;
 
                 private:
                     friend class boost::serialization::access;
@@ -230,8 +269,8 @@ namespace mempko
         namespace context 
         { 
             //useful typedefs
-            typedef add_object<model::muda,model::muda_ptr,model::muda_list> add_muda;
-            typedef remove_object<model::muda_list, id_type> remove_muda;
+            typedef add_object<model::muda,model::muda_dptr, model::muda_list> add_muda;
+            typedef remove_object<model::muda_list_dptr, id_type> remove_muda;
             typedef modify_text_context<model::muda> modify_muda_text;
 
         }

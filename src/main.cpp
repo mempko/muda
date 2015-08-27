@@ -25,6 +25,7 @@
 #include <Wt/WLineEdit>
 #include <Wt/WPushButton>
 #include <Wt/WText>
+#include <Wt/Dbo/backend/Postgres>
 
 #include <boost/optional.hpp>
 #include <boost/regex.hpp>
@@ -43,13 +44,14 @@ namespace mt = mempko::muda::wt;
 
 typedef std::list<boost::signals2::connection> connections;
 
-typedef boost::optional<boost::wregex> optional_regex;
+typedef boost::optional<boost::regex> optional_regex;
 
 class app : public WApplication
 {
     public:
         app(const WEnvironment& env);
     private:
+        void connect();
         void login_screen();
         void startup_muda_screen();
         void setup_view();
@@ -70,16 +72,16 @@ class app : public WApplication
         void add_new_later_muda(mt::muda_list_widget* mudas);
         void add_new_done_muda(mt::muda_list_widget* mudas);
         void add_new_note_muda(mt::muda_list_widget* mudas);
-        mm::muda_ptr add_new_muda();
-        void add_muda_to_list_widget(mm::muda_ptr muda, mt::muda_list_widget*);
+        mm::muda_dptr add_new_muda();
+        void add_muda_to_list_widget(mm::muda_dptr muda, mt::muda_list_widget*);
 
     private:
-        bool filter_by_search(mm::muda_ptr muda);
-        bool filter_by_all(mm::muda_ptr muda);
-        bool filter_by_now(mm::muda_ptr muda);
-        bool filter_by_later(mm::muda_ptr muda);
-        bool filter_by_done(mm::muda_ptr muda);
-        bool filter_by_note(mm::muda_ptr muda);
+        bool filter_by_search(mm::muda_dptr muda);
+        bool filter_by_all(mm::muda_dptr muda);
+        bool filter_by_now(mm::muda_dptr muda);
+        bool filter_by_later(mm::muda_dptr muda);
+        bool filter_by_done(mm::muda_dptr muda);
+        bool filter_by_note(mm::muda_dptr muda);
         void set_search();
         void clear_search();
 
@@ -90,22 +92,37 @@ class app : public WApplication
 
     private:
         //login widgets
-        WLineEdit* _muda_file_edit;
+        WLineEdit* _muda_list_name_edit;
         optional_regex _search;
         optional_regex _set_search;
-        std::string _muda_file = "global";
+        m::text_type _muda_list_name = "global";
         connections _connections;
 
     private:
         //muda widgets
         WLineEdit* _new_muda = nullptr;
-        mm::muda_list _mudas;
+        dbo::backend::Postgres _con;
+        dbo::Session _session;
+        mm::muda_list_dptr _mudas;
 };
 
 app::app(const WEnvironment& env) : WApplication{env}
 {
+    connect();
     login_screen();
 }
+
+void app::connect()
+{
+    std::string c = "host=localhost user=muda password=fluffybunny dbname=muda";
+    _con.connect(c);
+    _session.setConnection(_con);
+
+    _session.mapClass<mm::muda>("muda");
+    _session.mapClass<mm::muda_list>("muda_list");
+    //_session.createTables();
+}
+
 
 void app::login_screen()
 {
@@ -115,24 +132,24 @@ void app::login_screen()
     auto layout = new WHBoxLayout;
 
     layout->addWidget(new WLabel{"Muda List:"}, 0, AlignMiddle);
-    layout->addWidget( _muda_file_edit = new WLineEdit{_muda_file}, 0, AlignMiddle);
-    _muda_file_edit->setFocus();
-    _muda_file_edit->setStyleClass("muda");
+    layout->addWidget( _muda_list_name_edit = new WLineEdit{_muda_list_name}, 0, AlignMiddle);
+    _muda_list_name_edit->setFocus();
+    _muda_list_name_edit->setStyleClass("muda");
 
     auto b = new WPushButton{"Load"};
     layout->addWidget(b, 0, AlignMiddle);
     layout->addStretch();
 
     b->clicked().connect(std::bind(&app::startup_muda_screen, this));
-    _muda_file_edit->enterPressed().connect(std::bind(&app::startup_muda_screen, this));
+    _muda_list_name_edit->enterPressed().connect(std::bind(&app::startup_muda_screen, this));
     root()->setLayout(layout);
 }
 
 void app::startup_muda_screen()
 {
-    _muda_file = _muda_file_edit->text().narrow();
+    _muda_list_name = _muda_list_name_edit->text().narrow();
 
-    setTitle(_muda_file);
+    setTitle(_muda_list_name);
     load_mudas();
     all_view();
 }
@@ -154,14 +171,17 @@ void app::all_view()
     setup_view();
 
     //create muda list widget
-    auto list_widget = new mt::muda_list_widget(_mudas, 
-            std::bind(&app::filter_by_all, this, ph::_1), root());
+    auto list_widget = new mt::muda_list_widget{_session, _mudas, 
+            std::bind(&app::filter_by_all, this, ph::_1), root()};
+
 
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
+
 
     //add muda when enter is pressed
     _new_muda->enterPressed().connect(
             std::bind(&app::add_new_all_muda, this, list_widget));
+
 }
 
 void app::triage_view()
@@ -171,11 +191,11 @@ void app::triage_view()
     setup_view();
 
     //create muda list widget
-    auto now = new mt::muda_list_widget{_mudas, 
+    auto now = new mt::muda_list_widget{_session, _mudas, 
             std::bind(&app::filter_by_now, this, ph::_1), root()};
-    auto later = new mt::muda_list_widget{_mudas, 
+    auto later = new mt::muda_list_widget{_session, _mudas, 
             std::bind(&app::filter_by_later, this, ph::_1), root()};
-    auto done = new mt::muda_list_widget{_mudas, 
+    auto done = new mt::muda_list_widget{_session, _mudas, 
             std::bind(&app::filter_by_done, this, ph::_1), root()};
 
     _connections.push_back(now->when_model_updated(std::bind(&app::save_mudas, this)));
@@ -194,7 +214,7 @@ void app::now_view()
     setup_view();
 
     //create muda list widget
-    auto list_widget = new mt::muda_list_widget{_mudas, 
+    auto list_widget = new mt::muda_list_widget{_session, _mudas, 
             std::bind(&app::filter_by_now, this, ph::_1), root()};
 
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
@@ -211,7 +231,7 @@ void app::later_view()
     setup_view();
 
     //create muda list widget
-    auto list_widget = new mt::muda_list_widget{_mudas, 
+    auto list_widget = new mt::muda_list_widget{_session, _mudas, 
             std::bind(&app::filter_by_later, this, ph::_1), root()};
 
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
@@ -226,7 +246,7 @@ void app::done_view()
     setup_view();
 
     //create muda list widget
-    auto list_widget = new mt::muda_list_widget{_mudas, 
+    auto list_widget = new mt::muda_list_widget{_session, _mudas, 
             std::bind(&app::filter_by_done, this, ph::_1), root()};
 
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
@@ -241,7 +261,7 @@ void app::note_view()
     setup_view();
 
     //create muda list widget
-    auto list_widget = new mt::muda_list_widget{_mudas, 
+    auto list_widget = new mt::muda_list_widget{_session, _mudas, 
             std::bind(&app::filter_by_note, this, ph::_1), root()};
 
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
@@ -259,20 +279,22 @@ void app::clear_connections()
 
 void app::save_mudas()
 {
-    std::ofstream o{_muda_file.c_str()};
-    boost::archive::xml_oarchive oa(o);
-
-    oa << BOOST_SERIALIZATION_NVP(_mudas);
+    //_session.flush();
 }
 
 void app::load_mudas()
 {
-    std::ifstream i{_muda_file.c_str()};
-    if(!i) return;
+    dbo::Transaction t{_session};
+    auto mudas = _session.find<mm::muda_list>().where("name = ?").bind(_muda_list_name);
+    if(mudas.resultValue())
+        _mudas = mudas;
+    else
+    {
+        auto ml = new mm::muda_list;
+        ml->name() = _muda_list_name;
+        _mudas = _session.add(ml);
+    }
 
-    boost::archive::xml_iarchive ia(i);
-
-    ia >> BOOST_SERIALIZATION_NVP(_mudas);
 }
 
 WLabel* create_menu_label(WString text, WString css_class)
@@ -360,11 +382,11 @@ try
     INVARIANT(_new_muda);
     INVARIANT_GREATER(_new_muda->text().value().size(), 0);
 
-    std::wstring anyChar{L".*"};
-    std::wstring search = _new_muda->text().value().substr(1);
-    std::wstring regex = anyChar + search + anyChar;
+    std::string anyChar{".*"};
+    std::string search = _new_muda->text().narrow().substr(1);
+    std::string regex = anyChar + search + anyChar;
 
-    boost::wregex e{regex};
+    boost::regex e{regex};
     _set_search = boost::make_optional(e);
 }
 catch(std::exception& e)
@@ -378,7 +400,7 @@ void app::clear_search()
     _set_search.reset();
 }
 
-bool app::filter_by_search(mm::muda_ptr muda)
+bool app::filter_by_search(mm::muda_dptr muda)
 try
 {
     REQUIRE(muda);
@@ -391,47 +413,48 @@ catch(...)
     return false;
 }
 
-bool app::filter_by_all(mm::muda_ptr muda)
+bool app::filter_by_all(mm::muda_dptr muda)
 {
     REQUIRE(muda);
     return filter_by_search(muda);
 }
 
-bool app::filter_by_now(mm::muda_ptr muda)
+bool app::filter_by_now(mm::muda_dptr muda)
 {
     REQUIRE(muda);
     return muda->type().state() == m::NOW && filter_by_search(muda);
 }
 
-bool app::filter_by_later(mm::muda_ptr muda)
+bool app::filter_by_later(mm::muda_dptr muda)
 {
     REQUIRE(muda);
     return muda->type().state() == m::LATER && filter_by_search(muda);
 }
 
-bool app::filter_by_done(mm::muda_ptr muda)
+bool app::filter_by_done(mm::muda_dptr muda)
 {
     REQUIRE(muda);
     return muda->type().state() == m::DONE && filter_by_search(muda);
 }
 
-bool app::filter_by_note(mm::muda_ptr muda)
+bool app::filter_by_note(mm::muda_dptr muda)
 {
     REQUIRE(muda);
     return muda->type().state() == m::NOTE && filter_by_search(muda);
 }
 
-mm::muda_ptr app::add_new_muda()
+mm::muda_dptr app::add_new_muda()
 {
     INVARIANT(_new_muda);
+    dbo::Transaction t{_session};
 
     //create new muda and add it to muda list
-    mm::muda_ptr muda{new mm::muda};
+    auto muda = _session.add(new mm::muda);
 
-    mc::modify_muda_text modify_text{*muda, _new_muda->text()};
+    mc::modify_muda_text modify_text{*(muda.modify()), _new_muda->text().narrow()};
     modify_text();
 
-    mc::add_muda add{muda, _mudas};
+    mc::add_muda add{muda, *(_mudas.modify())};
     add();
 
     ENSURE(muda);
@@ -459,7 +482,7 @@ void app::add_new_all_muda(mt::muda_list_widget* mudas)
     if(do_search()) {all_view();return;}
 
     auto muda = add_new_muda();
-    muda->type().now();
+    muda.modify()->type().now();
     add_muda_to_list_widget(muda, mudas);
 }
 
@@ -471,7 +494,7 @@ void app::add_new_triage_muda(mt::muda_list_widget* mudas)
     if(do_search()) {triage_view();return;}
 
     auto muda = add_new_muda();
-    muda->type().now();
+    muda.modify()->type().now();
     add_muda_to_list_widget(muda, mudas);
 }
 
@@ -483,7 +506,7 @@ void app::add_new_now_muda(mt::muda_list_widget* mudas)
     if(do_search()) {now_view();return;}
 
     auto muda = add_new_muda();
-    muda->type().now();
+    muda.modify()->type().now();
     add_muda_to_list_widget(muda, mudas);
 }
 
@@ -495,7 +518,7 @@ void app::add_new_later_muda(mt::muda_list_widget* mudas)
     if(do_search()) {later_view();return;}
 
     auto muda = add_new_muda();
-    muda->type().later();
+    muda.modify()->type().later();
     add_muda_to_list_widget(muda, mudas);
 }
 
@@ -507,7 +530,7 @@ void app::add_new_done_muda(mt::muda_list_widget* mudas)
     if(do_search()) {done_view();return;}
 
     auto muda = add_new_muda();
-    muda->type().done();
+    muda.modify()->type().done();
     add_muda_to_list_widget(muda, mudas);
 }
 
@@ -519,11 +542,11 @@ void app::add_new_note_muda(mt::muda_list_widget* mudas)
     if(do_search()) {note_view();return;}
 
     auto muda = add_new_muda();
-    muda->type().note();
+    muda.modify()->type().note();
     add_muda_to_list_widget(muda, mudas);
 }
 
-void app::add_muda_to_list_widget(mm::muda_ptr muda, mt::muda_list_widget* list_widget)
+void app::add_muda_to_list_widget(mm::muda_dptr muda, mt::muda_list_widget* list_widget)
 {
     REQUIRE(muda);
     REQUIRE(list_widget);

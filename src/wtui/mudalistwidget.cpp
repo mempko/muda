@@ -28,11 +28,12 @@ namespace mempko
             namespace w = Wt;
 
             muda_list_widget::muda_list_widget(
-                    model::muda_list& mudas, 
+                    dbo::Session& s,
+                    model::muda_list_dptr mudas, 
                     muda_list_widget::filter_func filter, 
                     w::WContainerWidget* parent) :
                 w::WCompositeWidget{parent},
-                _mudas{mudas}, _filter{filter}
+                _mudas{mudas}, _filter{filter}, _session{s}
             {
                 REQUIRE(parent);
 
@@ -53,21 +54,22 @@ namespace mempko
 
             void muda_list_widget::create_ui()
             {
+                dbo::Transaction t{_session};
                 _root->resize(w::WLength(100, w::WLength::Percentage), w::WLength::Auto);
-                for(const auto& m : _mudas) add_muda(m);
+                for(const auto& m : _mudas->list()) add_muda(m);
             }
 
-            void muda_list_widget::add_muda(model::muda_ptr muda)
+            void muda_list_widget::add_muda(model::muda_dptr muda)
             {
                 REQUIRE(muda);
 
                 //do not add if it does not pass filter
                 if(!_filter(muda)) return;
 
-                _connections.push_back(muda->when_text_changes(bind(&muda_list_widget::fire_update_sig, this)));
+                _connections.push_back(muda.modify()->when_text_changes(bind(&muda_list_widget::fire_update_sig, this)));
 
                 //create new muda widget and add it to widget list
-                muda_widget* new_widget = new muda_widget(muda);
+                muda_widget* new_widget = new muda_widget{_session, muda};
 
                 _connections.push_back(new_widget->when_delete_pressed(bind(&muda_list_widget::remove_muda, this, _1, _2)));
                 _connections.push_back(new_widget->when_type_pressed(bind(&muda_list_widget::fire_update_sig, this)));
@@ -81,8 +83,9 @@ namespace mempko
             void muda_list_widget::remove_muda(id_type id, muda_widget* widget)
             {
                 REQUIRE(widget);
+                dbo::Transaction t{_session};
 
-                context::remove_muda remove(id, _mudas); 
+                context::remove_muda remove{id, *(_mudas.modify())}; 
                 remove();
 
                 fire_update_sig();

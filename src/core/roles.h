@@ -182,7 +182,7 @@ namespace mempko
                     virtual bool add(object& obj) 
                     {
                         LOCK;
-                        self()->list().push_back(obj);
+                        self()->list().insert(obj);
                         this->signal();
                         return true;
                     }
@@ -233,7 +233,7 @@ namespace mempko
                         LOCK;
                         object_ptr removed_obj;
                         id_is<object_ptr, id> pred{v, removed_obj};
-                        self()->list().remove_if(pred);
+                        self()->remove_if(pred);
                         if(removed_obj) this->signal(removed_obj);
                         return removed_obj.get() != nullptr;
                     }

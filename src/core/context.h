@@ -93,13 +93,14 @@ namespace mempko
                         {
                             typedef typename list::list_type list_type;
 
-                            set_incremental_id<m, list_type> set_id(*_m, _list);
+                            auto mm = _m.modify();
+                            set_incremental_id<m, list_type> set_id(*mm, _list);
                             role::appendable<m_ptr>* sink = &_list;
 
                             CHECK(sink);
 
                             set_id();
-                            _m->stamp();
+                            mm->stamp();
                             sink->add(_m);
                         }
 

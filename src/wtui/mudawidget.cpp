@@ -29,9 +29,12 @@ namespace mempko
             using boost::mem_fn;
             namespace w = Wt;
 
-            muda_widget::muda_widget(model::muda_ptr muda, w::WContainerWidget* parent) :
+            muda_widget::muda_widget(
+                    dbo::Session& s,
+                    model::muda_dptr muda, 
+                    w::WContainerWidget* parent) :
                 w::WCompositeWidget{parent},
-                _muda{muda}
+                _muda{muda}, _session{s}
             {
                 REQUIRE(muda);
 
@@ -63,9 +66,9 @@ namespace mempko
                     (bind(&muda_widget::change_text, this));
 
                 //when the model changes the text or type
-                _when_text_changes = _muda->when_text_changes(
+                _when_text_changes = _muda.modify()->when_text_changes(
                         bind(&muda_widget::update_text, this));
-                _when_type_changes = _muda->type().when_type_changes(
+                _when_type_changes = _muda.modify()->type().when_type_changes(
                         bind(&muda_widget::update_type, this));
 
                 //delete button
@@ -94,6 +97,9 @@ namespace mempko
                 _root->setStyleClass("muda-container");
                 _root->resize(w::WLength(100, w::WLength::Percentage), w::WLength::Auto);
 
+                implementStateless(&muda_widget::show_buttons);
+                implementStateless(&muda_widget::hide_buttons);
+
                 _root->mouseWentOver().connect
                     (bind(&muda_widget::show_buttons, this));
                 _root->mouseWentOut().connect
@@ -110,7 +116,7 @@ namespace mempko
                 INVARIANT(_muda);
                 INVARIANT(_edit);
 
-                context::modify_muda_text modify_text(*_muda, _edit->text());
+                context::modify_muda_text modify_text{*(_muda.modify()), _edit->text().narrow()};
                 modify_text();
             }
 
@@ -160,8 +166,9 @@ namespace mempko
             void muda_widget::type_pressed()
             {
                 INVARIANT(_muda);
+                dbo::Transaction t{_session};
 
-                context::transition_state transition(_muda->type());
+                context::transition_state transition(_muda.modify()->type());
                 transition();
                 _type_sig();
             }

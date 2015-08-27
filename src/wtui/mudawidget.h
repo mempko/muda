@@ -41,7 +41,10 @@ namespace mempko
             class muda_widget : public Wt::WCompositeWidget
             {
                 public:
-                    muda_widget(model::muda_ptr muda, Wt::WContainerWidget* parent = 0);
+                    muda_widget(
+                            dbo::Session& s,
+                            model::muda_dptr muda, 
+                            Wt::WContainerWidget* parent = 0);
                     ~muda_widget();
 
                 public:
@@ -65,7 +68,7 @@ namespace mempko
                     void delete_pressed();
 
                 private:
-                    model::muda_ptr _muda;
+                    model::muda_dptr _muda;
                     boost::signals2::connection _when_text_changes;
                     boost::signals2::connection _when_type_changes;
                     Wt::WContainerWidget* _root;
@@ -75,6 +78,7 @@ namespace mempko
                     Wt::WLabel* _type;
                     delete_sig _delete_sig;
                     type_sig _type_sig;
+                    dbo::Session& _session;
 
             };
 

@@ -28,5 +28,7 @@ add_executable(
 target_link_libraries(
     muda
     wt
+    wtdbo
+    wtdbopostgres
     wthttp
     ${Boost_LIBRARIES})

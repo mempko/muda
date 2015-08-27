@@ -41,9 +41,10 @@ namespace mempko
             class muda_list_widget : public Wt::WCompositeWidget
             {
                 public:
-                    typedef boost::function<bool (model::muda_ptr)> filter_func;
+                    typedef boost::function<bool (model::muda_dptr)> filter_func;
                     muda_list_widget(
-                            model::muda_list& mudas, 
+                            dbo::Session& s,
+                            model::muda_list_dptr mudas, 
                             filter_func filter, 
                             Wt::WContainerWidget* parent = 0);
                     ~muda_list_widget();
@@ -55,7 +56,7 @@ namespace mempko
                     connection when_model_updated(const update_slot& slot);
 
                 public:
-                    void add_muda(model::muda_ptr muda);
+                    void add_muda(model::muda_dptr muda);
 
                 private:
                     void create_ui();
@@ -65,10 +66,11 @@ namespace mempko
 
                 private:
                     filter_func _filter;
-                    model::muda_list& _mudas;
+                    model::muda_list_dptr _mudas;
                     muda_widget_list _muda_widgets;
                     update_sig _update_sig;
                     Wt::WContainerWidget* _root;
+                    dbo::Session& _session;
 
                     connections _connections;
             };
