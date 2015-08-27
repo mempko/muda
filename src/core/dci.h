@@ -10,6 +10,8 @@ namespace mempko { namespace dci {
     t* const self() { return static_cast<t*>(this);} \
     const t* self() const { return static_cast<const t*>(this);} 
 
+#define TAG(t) struct t {};
+
 
 }}//namespace
 
