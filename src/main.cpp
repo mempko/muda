@@ -21,6 +21,7 @@
 
 #include <Wt/WApplication>
 #include <Wt/WBreak>
+#include <Wt/WStackedWidget>
 #include <Wt/WContainerWidget>
 #include <Wt/WLabel>
 #include <Wt/WLineEdit>
@@ -103,9 +104,11 @@ class app : public WApplication
     private:
         //muda widgets
         WLineEdit* _new_muda = nullptr;
+        WStackedWidget* _stack = nullptr;
         mt::session _session;
         mm::user_dptr _user;
         mm::muda_list_dptr _mudas;
+
 };
 
 app::app(const WEnvironment& env) : WApplication{env}
@@ -119,6 +122,7 @@ void app::login_screen()
     INVARIANT(root());
 
     root()->clear();
+    root()->addStyleClass("container");
 
     _session.login().changed().connect(this, &app::oauth_event);
 
@@ -129,14 +133,16 @@ void app::login_screen()
     auto auth_w = new wo::AuthWidget{_session.login()};
     auth_w->setModel(auth_model);
     auth_w->setRegistrationEnabled(true);
+    auth_w->processEnvironment();
+
+    _stack = new WStackedWidget;
 
     /////////////////////////////////////////
 
-    auto layout = new WHBoxLayout;
-    layout->addWidget(new WText{"<h1>Muda List</h1>"});
-    layout->addWidget(auth_w);
+    root()->addWidget(new WText{"<h1>Muda List</h1>"});
 
-    root()->setLayout(layout);
+    root()->addWidget(auth_w);
+    root()->addWidget(_stack);
 }
 
 void app::oauth_event()
@@ -575,7 +581,7 @@ void app::add_muda_to_list_widget(mm::muda_dptr muda, mt::muda_list_widget* list
 WApplication *create_application(const WEnvironment& env)
 {
     auto a = new app{env};
-    a->useStyleSheet("resource/style.css");
+    a->useStyleSheet("resources/style.css");
     a->setTitle("Muda");                               
     return a;
 }
