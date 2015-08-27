@@ -5,21 +5,28 @@
 #include <Wt/WPushButton>
 #include <Wt/WText>
 
+#include "muda.h"
+#include "context.h"
+
 using namespace Wt;
 
-class App : public WApplication
+namespace mm = mempko::muda::model;
+namespace mc = mempko::muda::context;
+
+class app : public WApplication
 {
     public:
-        App(const WEnvironment& env);
+        app(const WEnvironment& env);
 
     private:
         WLineEdit *_task;
         WText *_echo;
 
-        void echo();
+        void change_text();
+        void update_text_display(const mm::muda& muda);
 };
 
-App::App(const WEnvironment& env) : WApplication(env)
+app::app(const WEnvironment& env) : WApplication(env)
 {
     setTitle("Hello world");                               
 
@@ -34,24 +41,35 @@ App::App(const WEnvironment& env) : WApplication(env)
 
     _echo = new WText(root());                      
 
-    b->clicked().connect(this, &App::echo);
+    b->clicked().connect(this, &app::change_text);
 
     _task->enterPressed().connect
-        (boost::bind(&App::echo, this));
+        (boost::bind(&app::change_text, this));
 }
 
-void App::echo()
+void app::update_text_display(const mm::muda& muda)
 {
-    _echo->setText("echo:" + _task->text());
+	_echo->setText(Wt::WString("change_text:") + muda.text());
 }
 
-WApplication *createApplication(const WEnvironment& env)
+void app::change_text()
 {
-    return new App(env);
+    mm::muda muda;
+
+	muda.when_changed(boost::bind(boost::mem_fn(&app::update_text_display), this, _1));
+
+    mc::modify_text_context<mm::muda> change_muda_text(muda, _task->text());
+
+    change_muda_text();
+}
+
+WApplication *create_application(const WEnvironment& env)
+{
+    return new app(env);
 }
 
 int main(int argc, char **argv)
 {
-    return WRun(argc, argv, &createApplication);
+    return WRun(argc, argv, &create_application);
 }
 
