@@ -97,6 +97,18 @@ namespace mempko { namespace muda { namespace context {
                 role::removable_container<id>& _removable;
         };
 
+    class transition_state
+    {
+        public:
+            transition_state(role::transitional_object& obj) : _obj(obj) {}
+            void operator()()
+            {
+                _obj.transition();
+            }
+        private:
+            role::transitional_object& _obj;
+    };
+
 }}}//namespace
 
 

@@ -150,6 +150,39 @@ namespace mempko { namespace muda { namespace role {
                 sig _sig;
         };
 
+    class transitional_object
+    {
+        public:
+            virtual void transition() = 0;
+    };
+
+    template<class type>
+    class transitional_state_and_notify : public transitional_object
+    {
+        ADD_SELF(type)
+        public:
+            virtual void transition()
+            {
+                muda_state initial_state = self()->state();
+                switch(initial_state)
+                {
+                    case NOW: self()->done(); break;
+                    case LATER: self()->now(); break;
+                    case DONE: self()->note(); break;
+                    case NOTE: self()->now(); break;
+                }
+                BOOST_ASSERT(initial_state != self()->state());
+                _sig();
+            }
+        public:
+            typedef boost::signals2::signal<void ()> sig;				
+            typedef typename sig::slot_type slot_type;
+            void when_type_changes(const slot_type& slot) { _sig.connect(slot);}
+
+        private:
+            sig _sig;
+    };
+
 }}} //namespace
 
 #endif

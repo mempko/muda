@@ -17,22 +17,23 @@
 
 namespace mempko { namespace muda { namespace model { 
 
-    class muda_triage
+    class muda_type : 
+        public role::transitional_state_and_notify<muda_type>
     {
         public:
-            enum state_t { NOW, LATER, DONE};
-            muda_triage() : _state(NOW) {}
+            muda_type() : _state(NOW) {}
 
         public:
-            state_t state() const { return _state;} 
-            void state(state_t s) { _state = s;} 
+            muda_state state() const { return _state;} 
+            void state(muda_state s) { _state = s;} 
 
             void now() { _state = NOW;}
             void later() { _state = LATER;}
             void done() { _state = DONE;}
+            void note() { _state = NOTE;}
 
         private:
-            state_t _state;
+            muda_state _state;
 
         private:
             friend class boost::serialization::access;
@@ -49,20 +50,20 @@ namespace mempko { namespace muda { namespace model {
         public role::simple_id_reciever<muda>
     {
         public:
-            muda() : _text(), _id(0), _triage() {}
+            muda() : _text(), _id(0), _type() {}
             const text_type& text() const { return _text;}
             void text(const text_type& text) { _text = text;}
 
             id_type id() const { return _id;}
             void id(id_type v) { _id = v;}
 
-            muda_triage& triage() {return _triage;}
-            const muda_triage& triage() const {return _triage;}
+            muda_type& type() {return _type;}
+            const muda_type& type() const {return _type;}
 
         private:
             text_type _text;
             id_type _id;
-            muda_triage _triage;
+            muda_type _type;
 
         private:
 
@@ -73,7 +74,7 @@ namespace mempko { namespace muda { namespace model {
                     using namespace boost::serialization;
                     ar & make_nvp("id", _id);
                     ar & make_nvp("text", _text);
-                    ar & make_nvp("triage", _triage);
+                    ar & make_nvp("type", _type);
                 }
     };
 
