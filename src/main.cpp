@@ -273,7 +273,7 @@ WContainerWidget* app::create_menu()
     note->clicked().connect (bind(&app::note_view, this));
 
     WLabel* menu[] = { all, triage, now, later, done, note};
-    unsigned int total = 5;
+    unsigned int total = 6;
     unsigned int last = total - 1;
 
     WContainerWidget* tabs = new WContainerWidget();
