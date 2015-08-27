@@ -68,6 +68,7 @@ class app : public WApplication
     private:
         void set_view();
         void login_screen();
+        void settings_screen();
         void oauth_event();
         void startup_muda_screen();
         void setup_view();
@@ -134,6 +135,7 @@ app::app(const WEnvironment& env) : WApplication{env}
     if(!env.server()->readConfigurationProperty("db", db))
         throw std::invalid_argument("db configuration is missing");
 
+
     _session = std::make_shared<mt::session>(db);
     _session->login().changed().connect(this, &app::oauth_event);
 
@@ -142,13 +144,13 @@ app::app(const WEnvironment& env) : WApplication{env}
     ENSURE(_session);
 }
 
-
 void app::login_screen()
 {
+    INVARIANT(_session);
     REQUIRE_FALSE(_session->login().loggedIn());
     INVARIANT(root());
-    INVARIANT(_session);
 
+    root()->clear();
     root()->addStyleClass("container");
 
     auto auth_model = new wo::AuthModel{mt::session::auth(), _session->users(), this};
@@ -170,10 +172,25 @@ void app::login_screen()
         startup_muda_screen();
 }
 
-void app::set_view()
+void app::settings_screen()
 {
+    INVARIANT(root());
+    INVARIANT(_session);
+    REQUIRE(_session->login().loggedIn());
+
     root()->clear();
 
+    if(_user) load_user();
+
+    root()->addWidget(new WText{_user_name});
+    root()->addWidget(new WText{_user_email});
+
+    ENSURE(_user);
+    ENSURE(_mudas);
+}
+
+void app::set_view()
+{
     if(_session->login().loggedIn()) startup_muda_screen();
     else login_screen();
 }
@@ -187,13 +204,19 @@ void app::oauth_event()
 
 void app::startup_muda_screen()
 {
+    INVARIANT(root());
     INVARIANT(_session);
-    _user_name = _session->user_name();
-    _user_email = _session->email();
+    REQUIRE(_session->login().loggedIn());
+
+    root()->clear();
+
+    if(!_user) load_user();
 
     setTitle(_user_name);
-    load_user();
     triage_view();
+
+    ENSURE(_user);
+    ENSURE(_mudas);
 }
 
 void app::setup_view()
@@ -316,6 +339,9 @@ void app::load_user()
 
     dbo::Transaction t{_session->dbs()};
 
+    _user_name = _session->user_name();
+    _user_email = _session->email();
+
     _user = _session->user();
     if(!_user)
         throw std::runtime_error{"no user with: " + _user_name};
@@ -392,6 +418,7 @@ WContainerWidget* app::create_menu()
     //setup settings buttons
     auto settings = create_small_label("&#128100;", "sbtn muda-settings-button");
     settings->setToolTip("settings");
+    settings->clicked().connect(std::bind(&app::settings_screen, this));
 
     auto logout = create_small_label("&#59201;", "sbtn muda-settings-button");
     logout->clicked().connect (std::bind(&app::logout, this));
