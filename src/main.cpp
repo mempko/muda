@@ -35,12 +35,12 @@ class app : public WApplication
         void note_view();
         WContainerWidget* create_menu();
     private:
-        void add_new_now_muda();
-        void add_new_later_muda();
-        void add_new_done_muda();
-        void add_new_note_muda();
+        void add_new_now_muda(mt::muda_list_widget* mudas);
+        void add_new_later_muda(mt::muda_list_widget* mudas);
+        void add_new_done_muda(mt::muda_list_widget* mudas);
+        void add_new_note_muda(mt::muda_list_widget* mudas);
         mm::muda_ptr add_new_muda();
-        void add_muda_to_list_widget(mm::muda_ptr muda);
+        void add_muda_to_list_widget(mm::muda_ptr muda, mt::muda_list_widget*);
     private:
         bool filter_by_all(mm::muda_ptr muda);
         bool filter_by_now(mm::muda_ptr muda);
@@ -54,11 +54,11 @@ class app : public WApplication
         //login widgets
         WLineEdit* _muda_file_edit;
         std::string _muda_file;
+        boost::signals2::connection _when_model_updated_connection;
     private:
         //muda widgets
         WLineEdit* _new_muda;
         mm::muda_list _mudas;
-        mt::muda_list_widget* _muda_list_widget;
 };
 
 app::app(const WEnvironment& env) : 
@@ -97,72 +97,78 @@ void app::startup_muda_screen()
 
 void app::all_view()
 {
+    _when_model_updated_connection.disconnect();
     root()->clear();
     create_header_ui();
 
+    //create muda list widget
+    mt::muda_list_widget* list_widget = new mt::muda_list_widget(_mudas, bind(&app::filter_by_all, this, _1), root());
+    _when_model_updated_connection = list_widget->when_model_updated(bind(&app::save_mudas, this));
     //add muda when enter is pressed
     _new_muda->enterPressed().connect
-        (bind(&app::add_new_now_muda, this));
+        (bind(&app::add_new_now_muda, this, list_widget));
 
-    //create muda list widget
-    _muda_list_widget = new mt::muda_list_widget(_mudas, bind(&app::filter_by_all, this, _1), root());
-    _muda_list_widget->when_model_updated(bind(&app::save_mudas, this));
 }
 
 void app::now_view()
 {
+    _when_model_updated_connection.disconnect();
     root()->clear();
     create_header_ui();
 
+    //create muda list widget
+    mt::muda_list_widget* list_widget = new mt::muda_list_widget(_mudas, bind(&app::filter_by_now, this, _1), root());
+    _when_model_updated_connection = list_widget->when_model_updated(bind(&app::save_mudas, this));
+
     //add muda when enter is pressed
     _new_muda->enterPressed().connect
-        (bind(&app::add_new_now_muda, this));
-
-    //create muda list widget
-    _muda_list_widget = new mt::muda_list_widget(_mudas, bind(&app::filter_by_now, this, _1), root());
-    _muda_list_widget->when_model_updated(bind(&app::save_mudas, this));
+        (bind(&app::add_new_now_muda, this, list_widget));
 }
 
 void app::later_view()
 {
+    _when_model_updated_connection.disconnect();
     root()->clear();
     create_header_ui();
 
+    //create muda list widget
+    mt::muda_list_widget* list_widget = new mt::muda_list_widget(_mudas, bind(&app::filter_by_later, this, _1), root());
+    _when_model_updated_connection = list_widget->when_model_updated(bind(&app::save_mudas, this));
+
     //add muda when enter is pressed
     _new_muda->enterPressed().connect
-        (bind(&app::add_new_later_muda, this));
+        (bind(&app::add_new_later_muda, this, list_widget));
 
-    //create muda list widget
-    _muda_list_widget = new mt::muda_list_widget(_mudas, bind(&app::filter_by_later, this, _1), root());
-    _muda_list_widget->when_model_updated(bind(&app::save_mudas, this));
 }
 
 void app::done_view()
 {
+    _when_model_updated_connection.disconnect();
     root()->clear();
     create_header_ui();
 
+    //create muda list widget
+    mt::muda_list_widget* list_widget = new mt::muda_list_widget(_mudas, bind(&app::filter_by_done, this, _1), root());
+    _when_model_updated_connection = list_widget->when_model_updated(bind(&app::save_mudas, this));
+
     //add muda when enter is pressed
     _new_muda->enterPressed().connect
-        (bind(&app::add_new_done_muda, this));
-
-    //create muda list widget
-    _muda_list_widget = new mt::muda_list_widget(_mudas, bind(&app::filter_by_done, this, _1), root());
-    _muda_list_widget->when_model_updated(bind(&app::save_mudas, this));
+        (bind(&app::add_new_done_muda, this, list_widget));
 }
 
 void app::note_view()
 {
+    _when_model_updated_connection.disconnect();
     root()->clear();
     create_header_ui();
 
+    //create muda list widget
+    mt::muda_list_widget* list_widget = new mt::muda_list_widget(_mudas, bind(&app::filter_by_note, this, _1), root());
+    _when_model_updated_connection = list_widget->when_model_updated(bind(&app::save_mudas, this));
+
     //add muda when enter is pressed
     _new_muda->enterPressed().connect
-        (bind(&app::add_new_note_muda, this));
-
-    //create muda list widget
-    _muda_list_widget = new mt::muda_list_widget(_mudas, bind(&app::filter_by_note, this, _1), root());
-    _muda_list_widget->when_model_updated(bind(&app::save_mudas, this));
+        (bind(&app::add_new_note_muda, this, list_widget));
 }
 
 void app::save_mudas()
@@ -295,46 +301,46 @@ mm::muda_ptr app::add_new_muda()
     return muda;
 }
 
-void app::add_new_now_muda()
+void app::add_new_now_muda(mt::muda_list_widget* mudas)
 {
     BOOST_ASSERT(_new_muda);
 
     mm::muda_ptr muda = add_new_muda();
     muda->type().now();
-    add_muda_to_list_widget(muda);
+    add_muda_to_list_widget(muda, mudas);
 }
 
-void app::add_new_later_muda()
+void app::add_new_later_muda(mt::muda_list_widget* mudas)
 {
     BOOST_ASSERT(_new_muda);
 
     mm::muda_ptr muda = add_new_muda();
     muda->type().later();
-    add_muda_to_list_widget(muda);
+    add_muda_to_list_widget(muda, mudas);
 }
 
-void app::add_new_done_muda()
+void app::add_new_done_muda(mt::muda_list_widget* mudas)
 {
     BOOST_ASSERT(_new_muda);
 
     mm::muda_ptr muda = add_new_muda();
     muda->type().done();
-    add_muda_to_list_widget(muda);
+    add_muda_to_list_widget(muda, mudas);
 }
 
-void app::add_new_note_muda()
+void app::add_new_note_muda(mt::muda_list_widget* mudas)
 {
     BOOST_ASSERT(_new_muda);
 
     mm::muda_ptr muda = add_new_muda();
     muda->type().note();
-    add_muda_to_list_widget(muda);
+    add_muda_to_list_widget(muda, mudas);
 }
 
-void app::add_muda_to_list_widget(mm::muda_ptr muda)
+void app::add_muda_to_list_widget(mm::muda_ptr muda, mt::muda_list_widget* list_widget)
 {
     BOOST_ASSERT(muda);
-    _muda_list_widget->add_muda(muda);
+    list_widget->add_muda(muda);
     _new_muda->setText(L"");
 
     save_mudas();
