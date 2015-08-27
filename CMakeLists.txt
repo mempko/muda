@@ -19,7 +19,7 @@ project(muda)
 
 #setup boost
 set(Boost_USE_STATIC_LIBS on)
-find_package(Boost 1.42 COMPONENTS filesystem serialization regex signals)
+find_package(Boost 1.42 COMPONENTS filesystem date_time serialization wserialization regex signals )
 link_directories(${Boost_LIBRARY_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
 
