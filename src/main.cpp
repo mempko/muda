@@ -8,66 +8,42 @@
 #include <list>
 #include "core/muda.h"
 #include "core/context.h"
+#include "wtui/mudawidget.h"
 
 using namespace Wt;
 
 namespace mm = mempko::muda::model;
 namespace mc = mempko::muda::context;
+namespace mt = mempko::muda::wt;
 
 class app : public WApplication
 {
     public:
         app(const WEnvironment& env);
-
     private:
-        WLineEdit *_task;
-        WText *_echo;
-
-        void change_text();
-        void update_text_display(const mm::muda& muda);
+        void create_ui();
+    private:
+        mt::muda_widget* _muda_widget;
+        mm::muda_list _mudas;
 };
 
 app::app(const WEnvironment& env) : WApplication(env)
 {
     setTitle("Hello world");                               
-
-    root()->addWidget(new WText("enter:")); 
-    _task = new WLineEdit(root());                   
-    _task->setFocus();                              
-
-    WPushButton *b = new WPushButton("add", root()); 
-    b->setMargin(5, Left);                                
-
-    root()->addWidget(new WBreak());                     
-
-    _echo = new WText(root());                      
-
-    b->clicked().connect(this, &app::change_text);
-
-    _task->enterPressed().connect
-        (boost::bind(&app::change_text, this));
+    create_ui();
 }
 
-void app::update_text_display(const mm::muda& muda)
+void app::create_ui()
 {
-	_echo->setText(Wt::WString("change_text:") + muda.text());
-    std::cout << "id: " << muda.id() << std::endl;
-}
-
-void app::change_text()
-{
-    mm::muda_list mudas;
     mm::muda_ptr muda(new mm::muda);
 
-    mc::add_object<mm::muda,mm::muda_ptr,mm::muda_list> add(muda, mudas);
+    //add muda to muda list
+    mc::add_muda add(muda, _mudas);
     add();
-    std::cout << "total mudas: " << mudas.size() << std::endl;
 
-	muda->when_text_changes(boost::bind(boost::mem_fn(&app::update_text_display), this, _1));
+    _muda_widget = new mt::muda_widget(muda, root());
 
-    mc::modify_text_context<mm::muda> change_muda_text(*muda, _task->text());
-
-    change_muda_text();
+    std::cout << "total mudas: " << _mudas.size() << std::endl;
 }
 
 WApplication *create_application(const WEnvironment& env)

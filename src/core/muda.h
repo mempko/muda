@@ -12,6 +12,7 @@
 
 #include "core/types.h"
 #include "core/roles.h"
+#include "core/context.h"
 
 namespace mempko { namespace muda { namespace model { 
 
@@ -96,6 +97,15 @@ namespace mempko { namespace muda { namespace model {
                     ar & make_nvp("email", _email);
                 }
     };
+
+
+
+
+}}}//namespace
+
+namespace mempko { namespace muda { namespace context { 
+    //useful typedefs
+    typedef add_object<model::muda,model::muda_ptr,model::muda_list> add_muda;
 
 }}}//namespace
 

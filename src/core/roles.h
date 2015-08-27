@@ -31,8 +31,9 @@ namespace mempko { namespace muda { namespace role {
 
             public:
                 typedef boost::signals2::signal<void (const m&)> sig;				
+                typedef boost::signals2::connection connection;
                 typedef typename sig::slot_type slot_type;
-                void when_text_changes(const slot_type& slot) { _sig.connect(slot);}
+                connection when_text_changes(const slot_type& slot) { return _sig.connect(slot);}
             private:
                 sig _sig;
 
