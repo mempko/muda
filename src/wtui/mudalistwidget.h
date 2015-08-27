@@ -53,7 +53,11 @@ namespace mempko
                     typedef boost::signals2::connection connection;
                     typedef boost::signals2::signal<void ()> update_sig;
                     typedef update_sig::slot_type update_slot;
-                    connection when_model_updated(const update_slot& slot);
+
+                    auto when_model_updated(const update_slot& slot)
+                    {
+                        return _update_sig.connect(slot);
+                    }
 
                 public:
                     void add_muda(model::muda_dptr muda);

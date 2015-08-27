@@ -28,12 +28,12 @@ namespace mempko
 { 
     namespace muda 
     {
-        typedef std::string text_type;
-        typedef long id_type;
+        using text_type = std::string;
+        using id_type = long;
         enum muda_state { NOW, LATER, DONE, NOTE};
 
-        typedef boost::gregorian::date date;
-        typedef boost::posix_time::ptime time;
+        using date = boost::gregorian::date;
+        using time = boost::posix_time::ptime;
 
     }
 }

@@ -35,6 +35,7 @@
 
 #include <Wt/Dbo/Dbo>
 #include <Wt/Dbo/WtSqlTraits>
+#include <Wt/Auth/Dbo/AuthInfo>
 
 namespace dbo = Wt::Dbo;
 #define LOCK boost::mutex::scoped_lock lll(this->mutex())
@@ -66,17 +67,6 @@ namespace mempko
                 public:
                     muda_state _state = NOW;
                     time _modified;
-
-                private:
-                    friend class boost::serialization::access;
-                    template<class Archive>
-                        void serialize(Archive & ar, const unsigned int version)
-                        {
-                            LOCK;
-                            using namespace boost::serialization;
-                            ar & make_nvp("state", _state);
-                            ar & make_nvp("modified", _modified);
-                        }
             };
         }
     }
@@ -138,20 +128,6 @@ namespace mempko
                     time _modified;
                     muda_list_dptr _list;
 
-                private:
-                    friend class boost::serialization::access;
-                    template<class Archive>
-                        void serialize(Archive & ar, const unsigned int version)
-                        {
-                            LOCK;
-                            using namespace boost::serialization;
-                            ar & make_nvp("id", _id);
-                            ar & make_nvp("text", _text);
-                            ar & make_nvp("type", _type);
-                            ar & make_nvp("created", _created);
-                            ar & make_nvp("modified", _modified);
-                        }
-
                 public:
                     template<class Action>
                         void persist(Action& a)
@@ -180,9 +156,9 @@ namespace mempko
                     text_type& name() { return _name;}
 
                 public:
-                    typedef muda_ptr_list list_type;
-                    typedef list_type::iterator iterator;
-                    typedef list_type::const_iterator const_iterator;
+                    using list_type = muda_ptr_list;
+                    using iterator = list_type::iterator;
+                    using const_iterator = list_type::const_iterator;
 
                     list_type& list() { return _list;}
                     const list_type& list() const { return _list;}
@@ -212,16 +188,6 @@ namespace mempko
                     list_type _list;
                     text_type _name;
 
-                private:
-                    friend class boost::serialization::access;
-                    template<class Archive>
-                        void serialize(Archive & ar, const unsigned int version)
-                        {
-                            LOCK;
-                            using namespace boost::serialization;
-                            ar & make_nvp("mudas", _list);
-                        }
-
                 public:
                     template<class Action>
                         void persist(Action& a)
@@ -245,16 +211,6 @@ namespace mempko
                 private:
                     text_type _name;
                     text_type _email;
-
-                private:
-                    friend class boost::serialization::access;
-                    template<class Archive>
-                        void serialize(Archive & ar, const unsigned int version)
-                        {
-                            using namespace boost::serialization;
-                            ar & make_nvp("name", _name);
-                            ar & make_nvp("email", _email);
-                        }
             };
 
 #undef LOCK
@@ -269,9 +225,9 @@ namespace mempko
         namespace context 
         { 
             //useful typedefs
-            typedef add_object<model::muda,model::muda_dptr, model::muda_list> add_muda;
-            typedef remove_object<model::muda_list_dptr, id_type> remove_muda;
-            typedef modify_text_context<model::muda> modify_muda_text;
+            using add_muda = add_object<model::muda,model::muda_dptr, model::muda_list>;
+            using remove_muda = remove_object<model::muda_list_dptr, id_type>;
+            using modify_muda_text = modify_text_context<model::muda>;
 
         }
     }

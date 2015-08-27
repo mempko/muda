@@ -116,7 +116,7 @@ namespace mempko
                 INVARIANT(_muda);
                 INVARIANT(_edit);
 
-                context::modify_muda_text modify_text{*(_muda.modify()), _edit->text().narrow()};
+                auto modify_text = context::modify_muda_text{*(_muda.modify()), _edit->text().narrow()};
                 modify_text();
             }
 
@@ -168,7 +168,7 @@ namespace mempko
                 INVARIANT(_muda);
                 dbo::Transaction t{_session};
 
-                context::transition_state transition(_muda.modify()->type());
+                auto transition = context::transition_state{_muda.modify()->type()};
                 transition();
                 _type_sig();
             }

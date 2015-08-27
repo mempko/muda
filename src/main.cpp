@@ -174,14 +174,11 @@ void app::all_view()
     auto list_widget = new mt::muda_list_widget{_session, _mudas, 
             std::bind(&app::filter_by_all, this, ph::_1), root()};
 
-
     _connections.push_back(list_widget->when_model_updated(std::bind(&app::save_mudas, this)));
-
 
     //add muda when enter is pressed
     _new_muda->enterPressed().connect(
             std::bind(&app::add_new_all_muda, this, list_widget));
-
 }
 
 void app::triage_view()
@@ -446,16 +443,15 @@ bool app::filter_by_note(mm::muda_dptr muda)
 mm::muda_dptr app::add_new_muda()
 {
     INVARIANT(_new_muda);
-    dbo::Transaction t{_session};
 
     //create new muda and add it to muda list
     auto muda = _session.add(new mm::muda);
 
-    mc::modify_muda_text modify_text{*(muda.modify()), _new_muda->text().narrow()};
-    modify_text();
-
     mc::add_muda add{muda, *(_mudas.modify())};
     add();
+
+    mc::modify_muda_text modify_text{*(muda.modify()), _new_muda->text().narrow()};
+    modify_text();
 
     ENSURE(muda);
     return muda;
@@ -478,6 +474,7 @@ void app::add_new_all_muda(mt::muda_list_widget* mudas)
 {
     REQUIRE(mudas);
     INVARIANT(_new_muda);
+    dbo::Transaction t{_session};
 
     if(do_search()) {all_view();return;}
 
@@ -490,6 +487,7 @@ void app::add_new_triage_muda(mt::muda_list_widget* mudas)
 {
     REQUIRE(mudas);
     INVARIANT(_new_muda);
+    dbo::Transaction t{_session};
 
     if(do_search()) {triage_view();return;}
 
@@ -502,6 +500,7 @@ void app::add_new_now_muda(mt::muda_list_widget* mudas)
 {
     REQUIRE(mudas);
     INVARIANT(_new_muda);
+    dbo::Transaction t{_session};
 
     if(do_search()) {now_view();return;}
 
@@ -514,6 +513,7 @@ void app::add_new_later_muda(mt::muda_list_widget* mudas)
 {
     REQUIRE(mudas);
     INVARIANT(_new_muda);
+    dbo::Transaction t{_session};
 
     if(do_search()) {later_view();return;}
 
@@ -526,6 +526,7 @@ void app::add_new_done_muda(mt::muda_list_widget* mudas)
 {
     REQUIRE(mudas);
     INVARIANT(_new_muda);
+    dbo::Transaction t{_session};
 
     if(do_search()) {done_view();return;}
 
@@ -538,6 +539,7 @@ void app::add_new_note_muda(mt::muda_list_widget* mudas)
 {
     REQUIRE(mudas);
     INVARIANT(_new_muda);
+    dbo::Transaction t{_session};
 
     if(do_search()) {note_view();return;}
 

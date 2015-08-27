@@ -48,10 +48,11 @@ namespace mempko
                 class signaler0
                 {
                     public:
-                        typedef boost::signals2::signal<void ()> sig;				
-                        typedef boost::signals2::connection connection;
-                        typedef typename sig::slot_type slot_type;
-                        connection when_signaled(const slot_type& slot) 
+                        using sig = boost::signals2::signal<void ()>;				
+                        using connection = boost::signals2::connection;
+                        using slot_type = typename sig::slot_type;
+
+                        auto when_signaled(const slot_type& slot)
                         { 
                             return _sig.connect(slot);
                         }
@@ -67,10 +68,11 @@ namespace mempko
                 class signaler1
                 {
                     public:
-                        typedef boost::signals2::signal<void (obj)> sig;				
-                        typedef boost::signals2::connection connection;
-                        typedef typename sig::slot_type slot_type;
-                        connection when_signaled(const slot_type& slot) 
+                        using sig = boost::signals2::signal<void (obj)>;				
+                        using connection = boost::signals2::connection;
+                        using slot_type = typename sig::slot_type;
+
+                        auto when_signaled(const slot_type& slot) 
                         { 
                             return _sig.connect(slot);
                         }
@@ -110,7 +112,7 @@ namespace mempko
                     }
 
                 public:
-                    connection when_text_changes(const slot_type& slot) 
+                    auto when_text_changes(const slot_type& slot) 
                     { 
                         return when_signaled(slot);
                     }
@@ -140,8 +142,9 @@ namespace mempko
                 class iterable
                 {
                     public:
-                        typedef typename list::iterator iterator;
-                        typedef typename list::const_iterator const_iterator;
+                        using iterator = typename list::iterator;
+                        using const_iterator = typename list::const_iterator;
+
                         virtual iterator begin() = 0;
                         virtual iterator end() = 0; 
                         virtual const_iterator begin() const  = 0;
@@ -154,8 +157,9 @@ namespace mempko
             {
                 ADD_SELF(list)
                 public:
-                    typedef typename list_type::iterator iterator;
-                    typedef typename list_type::const_iterator const_iterator;
+                    using iterator = typename list_type::iterator;
+                    using const_iterator = typename list_type::const_iterator;
+
                     virtual iterator begin() { return self()->begin();}
                     virtual iterator end() { return self()->end();} 
                     virtual const_iterator begin() const { return self()->begin();}
@@ -188,7 +192,7 @@ namespace mempko
                     }
 
                 public:
-                    connection when_object_added(const slot_type& slot) 
+                    auto when_object_added(const slot_type& slot) 
                     { 
                         return when_signaled(slot);
                     }
@@ -231,17 +235,21 @@ namespace mempko
                     virtual bool remove(id v)
                     {
                         LOCK;
+
                         object_ptr removed_obj;
-                        id_is<object_ptr, id> pred{v, removed_obj};
+                        auto pred = id_is<object_ptr, id>{v, removed_obj};
+
                         self()->remove_if(pred);
                         if(removed_obj) this->signal(removed_obj);
+
                         return removed_obj.get() != nullptr;
                     }
 
                 public:
-                    typedef typename signaler1<when_removed, object_ptr>::connection connection;
-                    typedef typename signaler1<when_removed, object_ptr>::slot_type slot_type;
-                    connection when_object_removed(const slot_type& slot) 
+                    using connection = typename signaler1<when_removed, object_ptr>::connection;
+                    using slot_type = typename signaler1<when_removed, object_ptr>::slot_type;
+
+                    auto when_object_removed(const slot_type& slot) 
                     { 
                         return when_signaled(slot);
                     }
@@ -267,6 +275,7 @@ namespace mempko
                     virtual void transition()
                     {
                         auto initial_state = self()->state();
+
                         switch(initial_state)
                         {
                             case LATER: self()->now(); break;
@@ -281,7 +290,7 @@ namespace mempko
                     }
 
                 public:
-                    connection when_type_changes(const slot_type& slot) 
+                    auto when_type_changes(const slot_type& slot) 
                     { 
                         return when_signaled(slot);
                     }

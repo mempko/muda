@@ -56,7 +56,18 @@ namespace mempko
             {
                 dbo::Transaction t{_session};
                 _root->resize(w::WLength(100, w::WLength::Percentage), w::WLength::Auto);
-                for(const auto& m : _mudas->list()) add_muda(m);
+
+                const auto& list = _mudas->list();
+
+                auto ordered_list = std::vector<model::muda_dptr>{std::begin(list), std::end(list)};
+
+                std::sort(std::begin(ordered_list), std::end(ordered_list), 
+                        [](const auto& a, const auto& b)
+                        { 
+                            return a->id() < b->id();
+                        });
+
+                for(const auto& m : ordered_list) add_muda(m);
             }
 
             void muda_list_widget::add_muda(model::muda_dptr muda)
@@ -69,7 +80,7 @@ namespace mempko
                 _connections.push_back(muda.modify()->when_text_changes(bind(&muda_list_widget::fire_update_sig, this)));
 
                 //create new muda widget and add it to widget list
-                muda_widget* new_widget = new muda_widget{_session, muda};
+                auto new_widget = new muda_widget{_session, muda};
 
                 _connections.push_back(new_widget->when_delete_pressed(bind(&muda_list_widget::remove_muda, this, _1, _2)));
                 _connections.push_back(new_widget->when_type_pressed(bind(&muda_list_widget::fire_update_sig, this)));
@@ -85,7 +96,7 @@ namespace mempko
                 REQUIRE(widget);
                 dbo::Transaction t{_session};
 
-                context::remove_muda remove{id, *(_mudas.modify())}; 
+                auto remove = context::remove_muda{id, *(_mudas.modify())}; 
                 remove();
 
                 fire_update_sig();
@@ -98,12 +109,6 @@ namespace mempko
                 INVARIANT(this);
                 _update_sig();
             }
-
-            boost::signals2::connection muda_list_widget::when_model_updated(const update_slot& slot)
-            {
-                return _update_sig.connect(slot);
-            }
-
         }
     }
 }

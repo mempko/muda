@@ -27,16 +27,6 @@ namespace mempko
     { 
         namespace util 
         {
-            template<class ptr_has_id>
-                struct comp_ptr_by_id
-                {
-                    bool operator()(const ptr_has_id m1, const ptr_has_id m2) 
-                    {
-                        REQUIRE(m1);
-                        REQUIRE(m2);
-                        return m1->id() < m2->id();
-                    }
-                };
         }
     }
 }

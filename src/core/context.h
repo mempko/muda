@@ -61,17 +61,22 @@ namespace mempko
                         void operator()()
                         {
                             //find max
-                            typedef typename list_type::value_type list_value;
+                            using list_value = typename list_type::value_type;
+                            auto cp = std::vector<list_value>{std::begin(_list), std::end(_list)};
                             auto max = std::max_element(
-                                    _list.begin(), _list.end(), 
-                                    util::comp_ptr_by_id<list_value>());
+                                    std::begin(cp), std::end(cp), 
+                                    [](const auto& a, const auto& b) 
+                                    {
+                                        REQUIRE(a); REQUIRE(b);
+                                        return a->id() < b->id();
+                                    });
 
                             //increment
-                            id_type id = max != _list.end() ? (*max)->id() + 1: 0;
+                            auto id = max != cp.end() ? (*max)->id() + 1: 0;
 
                             //set
                             _m.recieve(id);                    
-                        }
+                        } 
 
                     private:
                         role::id_reciever<m>& _m;
@@ -89,20 +94,17 @@ namespace mempko
                         ENSURE(_m);
                     }
 
-                        void operator()()
-                        {
-                            typedef typename list::list_type list_type;
+                    void operator()()
+                    {
+                        using list_type = typename list::list_type;
 
-                            auto mm = _m.modify();
-                            set_incremental_id<m, list_type> set_id(*mm, _list);
-                            role::appendable<m_ptr>* sink = &_list;
+                        auto mm = _m.modify();
+                        auto set_id = set_incremental_id<m, list_type>{*mm, _list};
 
-                            CHECK(sink);
-
-                            set_id();
-                            mm->stamp();
-                            sink->add(_m);
-                        }
+                        set_id();
+                        mm->stamp();
+                        _list.add(_m);
+                    }
 
                     private:
                         m_ptr _m;
