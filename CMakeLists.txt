@@ -28,14 +28,10 @@ if(APPLE)
     set(Boost_INCLUDE_DIRS /opt/local/include)
     set(Boost_LIBRARIES boost_system boost_thread boost_regex boost_filesystem boost_date_time boost_serialization boost_signals boost_program_options)
 else()
-	find_package(Boost 1.46 COMPONENTS filesystem date_time serialization regex signals thread system)
+	find_package(Boost 1.58 COMPONENTS filesystem date_time serialization regex signals thread system)
 endif()
 
 link_directories(${Boost_LIBRARY_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
-
-#setup wt
-link_directories(/usr/local/lib)
-include_directories(/usr/local/include)
 
 add_subdirectory(src)
