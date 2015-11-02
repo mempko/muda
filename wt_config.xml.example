@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<server>
+    <application-settings location="*">
+        <properties>
+            <property name="db">
+                host=localhost user=#USER password=#PASS dbname=muda
+            </property>
+        </properties>
+    </application-settings>
+</server>
+
