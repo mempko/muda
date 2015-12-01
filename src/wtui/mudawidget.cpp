@@ -43,7 +43,7 @@ namespace mempko
                     using namespace boost::posix_time;
                     using namespace boost::gregorian;
 
-                    time epoch( boost::gregorian::date(1970, 1, 1));
+                    time epoch{boost::gregorian::date(1970, 1, 1)};
                     auto x = (pt - epoch).total_seconds();
                     auto t = time_t(x);
 
@@ -260,7 +260,15 @@ namespace mempko
                 INVARIANT(_date);
                 INVARIANT(_muda);
 
-                auto date = std::max(_muda->modified(), _muda->type().modified());
+                auto text_modified_date = _muda->modified();
+                auto type_modified_date = _muda->type().modified();
+
+                CHECK_FALSE(text_modified_date.is_not_a_date_time());
+                
+                auto date = type_modified_date.is_not_a_date_time() ? 
+                    text_modified_date :
+                    std::max(text_modified_date, type_modified_date);
+
                 _date->setText(timestamp(date));
             }
 
