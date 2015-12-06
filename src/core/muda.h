@@ -107,8 +107,6 @@ namespace mempko
                 public role::ptime_stampable_when_modified<muda>
             {
                 public:
-                    muda() : _text{}, _id{0}, _type{} {}
-
                     const text_type& text() const { return _text;}
                     void text(const text_type& text) { LOCK; _text = text;}
 
@@ -126,7 +124,7 @@ namespace mempko
 
                 private:
                     text_type _text;
-                    id_type _id;
+                    id_type _id = 0;
                     muda_type _type;
                     time _created;
                     time _modified;
@@ -161,6 +159,9 @@ namespace mempko
                 public:
                     const text_type& name() const { return _name;}
                     text_type& name() { return _name;}
+
+                    bool is_public() const { return _is_public;}
+                    void is_public(bool v) { LOCK; _is_public = v;}
 
                 public:
                     using list_type = muda_ptr_list;
@@ -197,14 +198,16 @@ namespace mempko
                     list_type _list;
                     text_type _name;
                     user_dptr _user;
+                    bool _is_public = false;
 
                 public:
                     template<class Action>
                         void persist(Action& a)
                         {
                             dbo::field(a, _name, "name");
+                            dbo::field(a, _is_public, "is_public");
                             dbo::hasMany(a, _list, dbo::ManyToOne, "list");
-                            dbo::belongsTo(a, _user, "mlist");
+                            dbo::belongsTo(a, _user, "muser");
                         }
             };
 
@@ -239,7 +242,7 @@ namespace mempko
                         void persist(Action& a)
                         {
                             dbo::field(a, _name, "name");
-                            dbo::hasMany(a, _lists, dbo::ManyToOne, "mlist");
+                            dbo::hasMany(a, _lists, dbo::ManyToOne, "muser");
                             dbo::hasMany(a, _auth_infos, Wt::Dbo::ManyToOne, "user");
                         }
             };

@@ -104,7 +104,19 @@ namespace mempko
                     user = _session.add(new model::user);
                     auth.modify()->setUser(user);
                 }
+
+                ENSURE(user);
                 return user;
+            }
+
+            model::user_dptr session::ro_user(const std::string& name) const
+            {
+                INVARIANT(_users);
+                auto auth_user = _users->findWithIdentity(wo::Identity::LoginName, name.c_str());
+                auto auth = _users->find(auth_user);
+
+                return auth ?  auth->user() : model::user_dptr{};
+
             }
 
             std::string session::user_name() const

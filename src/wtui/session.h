@@ -77,6 +77,7 @@ namespace mempko
                     static const oauth_service_ptr_list& oauth();
 
                     model::user_dptr user() const;
+                    model::user_dptr ro_user(const std::string& name) const;
 
                 private:
                     void connect(const std::string& db);
