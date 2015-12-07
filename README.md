@@ -38,4 +38,4 @@ Then execute
 License
 =========================
 This project is licensed under the GNU Affero GPL Version 3 license.
-Read the COPY file about the specifics of the license.
+Read the COPYING file about the specifics of the license.
