@@ -18,6 +18,7 @@
 */
 
 #include "wtui/mudalistwidget.h"
+#include <memory>
 
 namespace mempko 
 { 
@@ -32,14 +33,13 @@ namespace mempko
             muda_list_widget::muda_list_widget(
                     dbo::Session& s,
                     model::muda_list_dptr mudas, 
-                    muda_list_widget::mutate_func mut, 
-                    w::WContainerWidget* parent) :
-                w::WCompositeWidget{parent},
+                    muda_list_widget::mutate_func mut) :
+                w::WCompositeWidget{},
                 _mudas{mudas}, _session{s}
             {
-                REQUIRE(parent);
-
-                setImplementation(_root = new w::WContainerWidget);
+                auto root = std::make_unique<w::WContainerWidget>();
+                _root = root.get();
+                setImplementation(std::move(root));
                 create_ui(mut);
             }
 
@@ -57,7 +57,7 @@ namespace mempko
             void muda_list_widget::create_ui(muda_list_widget::mutate_func mut)
             {
                 dbo::Transaction t{_session};
-                _root->resize(w::WLength(100, w::WLength::Percentage), w::WLength::Auto);
+                _root->resize(w::WLength(100, w::WLength::Unit::Percentage), w::WLength::Auto);
 
                 const auto& list = _mudas->list();
 
@@ -71,18 +71,24 @@ namespace mempko
             {
                 REQUIRE(muda);
 
-                _connections.push_back(muda.modify()->when_text_changes(bind(&muda_list_widget::fire_update_sig, this)));
+                _connections.push_back(muda.modify()->when_text_changes(
+                            [this]() { fire_update_sig();}));
 
                 //create new muda widget and add it to widget list
-                auto new_widget = new muda_widget{_session, muda};
+                auto new_widget = std::make_unique<muda_widget>(_session, muda);
 
-                _connections.push_back(new_widget->when_delete_pressed(bind(&muda_list_widget::remove_muda, this, _1, _2)));
-                _connections.push_back(new_widget->when_type_pressed(bind(&muda_list_widget::fire_update_sig, this)));
+                _connections.push_back(new_widget->when_delete_pressed(
+                            [this](auto id, auto widget) { 
+                                remove_muda(id, widget);
+                            }));
+                _connections.push_back(new_widget->when_type_pressed(
+                            [this]() { fire_update_sig(); }));
 
-                if(_muda_widgets.empty()) _root->addWidget(new_widget);
-                else _root->insertBefore(new_widget, _muda_widgets.back());
+                _muda_widgets.push_back(new_widget.get());
 
-                _muda_widgets.push_back(new_widget);
+                if(_muda_widgets.empty()) _root->addWidget(std::move(new_widget));
+                else _root->insertBefore(std::move(new_widget), _muda_widgets.back());
+
             }
 
             void muda_list_widget::remove_muda(id_type id, muda_widget* widget)

@@ -22,18 +22,18 @@
 
 #include "core/muda.h"
 
-#include <Wt/Dbo/backend/Postgres>
-#include <Wt/Auth/Dbo/UserDatabase>
+#include <Wt/Dbo/backend/Postgres.h>
+#include <Wt/Auth/Dbo/UserDatabase.h>
 
-#include <Wt/Auth/Login>
-#include <Wt/Auth/AuthService>
-#include <Wt/Auth/HashFunction>
-#include <Wt/Auth/PasswordService>
-#include <Wt/Auth/PasswordStrengthValidator>
-#include <Wt/Auth/PasswordVerifier>
-#include <Wt/Auth/GoogleService>
-#include <Wt/Auth/Dbo/AuthInfo>
-#include <Wt/Auth/Dbo/UserDatabase>
+#include <Wt/Auth/Login.h>
+#include <Wt/Auth/AuthService.h>
+#include <Wt/Auth/HashFunction.h>
+#include <Wt/Auth/PasswordService.h>
+#include <Wt/Auth/PasswordStrengthValidator.h>
+#include <Wt/Auth/PasswordVerifier.h>
+#include <Wt/Auth/GoogleService.h>
+#include <Wt/Auth/Dbo/AuthInfo.h>
+#include <Wt/Auth/Dbo/UserDatabase.h>
 
 #include <memory>
 #include <string>
@@ -86,7 +86,6 @@ namespace mempko
                     user_database_ptr _users;
                     wo::Login _login;
 
-                    dbo::backend::Postgres _con;
                     mutable dbo::Session _session;
             };
 

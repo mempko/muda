@@ -22,48 +22,40 @@
 
 #include <boost/function.hpp>
 
-#include <Wt/WCompositeWidget>
-#include <Wt/WContainerWidget>
-#include <Wt/WLineEdit>
-#include <Wt/WImage>
-#include <Wt/WLabel>
-#include <Wt/WHBoxLayout>
+#include <Wt/WCompositeWidget.h>
+#include <Wt/WContainerWidget.h>
+#include <Wt/WLineEdit.h>
+#include <Wt/WImage.h>
+#include <Wt/WLabel.h>
+#include <Wt/WHBoxLayout.h>
 
 #include "wtui/romudawidget.h"
 
-namespace mempko 
+namespace mempko::muda::wt
 { 
-    namespace muda 
-    { 
-        namespace wt 
-        { 
+    using muda_vec = std::vector<model::muda_dptr>;
 
-            using muda_vec = std::vector<model::muda_dptr>;
+    class ro_muda_list_widget : public Wt::WCompositeWidget
+    {
+        public:
+            typedef boost::function<void (muda_vec&)> mutate_func;
+            ro_muda_list_widget(
+                    dbo::Session& s,
+                    model::muda_list_dptr mudas, 
+                    mutate_func mut);
+            ~ro_muda_list_widget();
 
-            class ro_muda_list_widget : public Wt::WCompositeWidget
-            {
-                public:
-                    typedef boost::function<void (muda_vec&)> mutate_func;
-                    ro_muda_list_widget(
-                            dbo::Session& s,
-                            model::muda_list_dptr mudas, 
-                            mutate_func mut, 
-                            Wt::WContainerWidget* parent = 0);
-                    ~ro_muda_list_widget();
+        public:
+            void add_muda(model::muda_dptr muda);
 
-                public:
-                    void add_muda(model::muda_dptr muda);
+        private:
+            void create_ui(mutate_func);
 
-                private:
-                    void create_ui(mutate_func);
-
-                private:
-                    model::muda_list_dptr _mudas;
-                    ro_muda_widget_list _muda_widgets;
-                    Wt::WContainerWidget* _root;
-                    dbo::Session& _session;
-            };
-        }
-    }
+        private:
+            model::muda_list_dptr _mudas;
+            ro_muda_widget_list _muda_widgets;
+            Wt::WContainerWidget* _root;
+            dbo::Session& _session;
+    };
 }
 #endif

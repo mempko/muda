@@ -18,6 +18,7 @@
 */
 
 #include "wtui/session.h"
+#include <memory>
 
 namespace mempko 
 { 
@@ -38,10 +39,10 @@ namespace mempko
                 auth_service.setAuthTokensEnabled(true, "muda");
                 auth_service.setEmailVerificationEnabled(true);
 
-                auto verifier = new wo::PasswordVerifier;
-                verifier->addHashFunction(new wo::BCryptHashFunction{7});
+                auto verifier = std::make_unique<wo::PasswordVerifier>();
+                verifier->addHashFunction(std::make_unique<wo::BCryptHashFunction>(7));
 
-                password_service.setVerifier(verifier);
+                password_service.setVerifier(std::move(verifier));
                 password_service.setAttemptThrottlingEnabled(true);
 
                 if(wo::GoogleService::configured())
@@ -55,8 +56,10 @@ namespace mempko
 
             void session::connect(const std::string& db)
             {
-                _con.connect(db);
-                _session.setConnection(_con);
+                auto con = std::make_unique<dbo::backend::Postgres>();
+                con->connect(db);
+
+                _session.setConnection(std::move(con));
 
                 _session.mapClass<model::muda>("muda");
                 _session.mapClass<model::muda_list>("mlist");
@@ -101,7 +104,7 @@ namespace mempko
                 auto user = auth->user();
                 if(!user)
                 {
-                    user = _session.add(new model::user);
+                    user = _session.add(std::make_unique<model::user>());
                     auth.modify()->setUser(user);
                 }
 

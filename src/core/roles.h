@@ -24,6 +24,7 @@
 #include <boost/signals2.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
+#include <chrono>
 
 #include "core/types.h"
 #include "core/dci.h"
@@ -314,10 +315,7 @@ namespace mempko
                 public:
                     virtual void stamp()
                     {
-                        using namespace boost::gregorian;
-                        using namespace boost::posix_time;
-
-                        auto now = second_clock::local_time();
+                        auto now = std::chrono::system_clock::now();
                         self()->modified(now);
                         self()->created(now);
                     }
@@ -337,10 +335,7 @@ namespace mempko
                 public:
                     virtual void stamp_modified()
                     {
-                        using namespace boost::posix_time;
-                        using namespace boost::gregorian;
-
-                        auto now = second_clock::local_time();
+                        auto now = std::chrono::system_clock::now();
                         self()->modified(now);
                     }
             };

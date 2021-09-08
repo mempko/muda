@@ -23,18 +23,18 @@
 #include <functional>
 #include <memory>
 
-#include <Wt/WApplication>
-#include <Wt/WBreak>
-#include <Wt/WStackedWidget>
-#include <Wt/WContainerWidget>
-#include <Wt/WLabel>
-#include <Wt/WLineEdit>
-#include <Wt/WPushButton>
-#include <Wt/WText>
-#include <Wt/Auth/AuthModel>
-#include <Wt/Auth/AuthWidget>
-#include <Wt/WServer>
-#include <Wt/WEnvironment>
+#include <Wt/WApplication.h>
+#include <Wt/WBreak.h>
+#include <Wt/WStackedWidget.h>
+#include <Wt/WContainerWidget.h>
+#include <Wt/WLabel.h>
+#include <Wt/WLineEdit.h>
+#include <Wt/WPushButton.h>
+#include <Wt/WText.h>
+#include <Wt/Auth/AuthModel.h>
+#include <Wt/Auth/AuthWidget.h>
+#include <Wt/WServer.h>
+#include <Wt/WEnvironment.h>
 
 #include <boost/optional.hpp>
 #include <boost/regex.hpp>
@@ -70,7 +70,7 @@ namespace mempko
                     void later_view();
                     void done_view();
                     void note_view();
-                    Wt::WContainerWidget* create_menu();
+                    std::unique_ptr<Wt::WContainerWidget> create_menu();
 
                 private:
                     bool do_search();
@@ -122,7 +122,7 @@ namespace mempko
 
             };
 
-            Wt::WApplication *create_application(const Wt::WEnvironment& env);
+            std::unique_ptr<Wt::WApplication> create_application(const Wt::WEnvironment& env);
         }
     }
 }

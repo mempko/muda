@@ -21,7 +21,7 @@
 
 #include "core/dbc.h"
 
-#include <Wt/WLength>
+#include <Wt/WLength.h>
 #include <sstream>
 #include <chrono>
 #include <ctime>
@@ -41,12 +41,8 @@ namespace mempko
             {
                 std::string timestamp(time pt)
                 {
-                    using namespace boost::posix_time;
-                    using namespace boost::gregorian;
-
-                    time epoch{boost::gregorian::date(1970, 1, 1)};
-                    auto x = (pt - epoch).total_seconds();
-                    auto t = time_t(x);
+                    auto x = pt.time_since_epoch()* std::chrono::system_clock::period::num / std::chrono::system_clock::period::den;
+                    auto t = time_t(x.count());
 
                     char str[20];
                     if(std::strftime(str, sizeof(str), "%b %d %I:%M:%S", std::localtime(&t))) 
@@ -58,9 +54,8 @@ namespace mempko
 
             ro_muda_widget::ro_muda_widget(
                     dbo::Session& s,
-                    model::muda_dptr muda, 
-                    w::WContainerWidget* parent) :
-                w::WContainerWidget{parent},
+                    model::muda_dptr muda) :
+                w::WContainerWidget{},
                 _muda{muda}, _session{s}
             {
                 REQUIRE(muda);
@@ -77,24 +72,27 @@ namespace mempko
                 INVARIANT(_muda);
 
                 //create text label
-                _text = new w::WLabel;
-                _text->setText(_muda->text());
-                _text->setWordWrap(true);
+                auto text = std::make_unique<w::WLabel>();
+                _text = text.get();
+                text->setText(_muda->text());
+                text->setWordWrap(true);
 
                 //date 
-                _date = new w::WLabel{""};
+                auto date = std::make_unique<w::WLabel>("");
+                _date = date.get();
 
                 //layout
-                _layout = new w::WHBoxLayout();
-                _layout->setSpacing(8);
-                _layout->addWidget(_text);
-                _layout->setStretchFactor(_text, 1);
-                _layout->addWidget(_date);
-                _layout->setContentsMargins(0,0,0,0);
+                auto layout = std::make_unique<w::WHBoxLayout>();
+                _layout = layout.get();
+                layout->setSpacing(8);
+                layout->addWidget(std::move(text));
+                layout->setStretchFactor(_text, 1);
+                layout->addWidget(std::move(date));
+                layout->setContentsMargins(0,0,0,0);
 
-                setLayout(_layout);
+                setLayout(std::move(layout));
                 setStyleClass("muda-container");
-                resize(w::WLength(100, w::WLength::Percentage), w::WLength::Auto);
+                resize(w::WLength(100, w::WLength::Unit::Percentage), w::WLength::Auto);
 
                 set_style();
                 set_date();
@@ -141,11 +139,7 @@ namespace mempko
                 auto text_modified_date = _muda->modified();
                 auto type_modified_date = _muda->type().modified();
 
-                CHECK_FALSE(text_modified_date.is_not_a_date_time());
-                
-                auto date = type_modified_date.is_not_a_date_time() ? 
-                    text_modified_date :
-                    std::max(text_modified_date, type_modified_date);
+                auto date = std::max(text_modified_date, type_modified_date);
 
                 _date->setText(timestamp(date));
             }

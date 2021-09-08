@@ -20,10 +20,7 @@
 #ifndef MEMPKO_MUDA_TYPES
 #define MEMPKO_MUDA_TYPES
 
-#include <boost/date_time/gregorian/gregorian.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/posix_time/time_serialize.hpp>
-
+#include <chrono>
 #include <string>
 
 namespace mempko 
@@ -34,8 +31,8 @@ namespace mempko
         using id_type = long;
         enum muda_state { NOW, LATER, DONE, NOTE};
 
-        using date = boost::gregorian::date;
-        using time = boost::posix_time::ptime;
+        //using date = boost::gregorian::date;
+        using time = std::chrono::system_clock::time_point;
 
     }
 }

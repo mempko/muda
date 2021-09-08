@@ -23,12 +23,12 @@
 #include <iostream>
 #include <list>
 
-#include <Wt/WCompositeWidget>
-#include <Wt/WContainerWidget>
-#include <Wt/WLineEdit>
-#include <Wt/WImage>
-#include <Wt/WLabel>
-#include <Wt/WHBoxLayout>
+#include <Wt/WCompositeWidget.h>
+#include <Wt/WContainerWidget.h>
+#include <Wt/WLineEdit.h>
+#include <Wt/WImage.h>
+#include <Wt/WLabel.h>
+#include <Wt/WHBoxLayout.h>
 
 #include "core/muda.h"
 #include "core/context.h"
@@ -45,8 +45,7 @@ namespace mempko
                 public:
                     ro_muda_widget(
                             dbo::Session& s,
-                            model::muda_dptr muda, 
-                            Wt::WContainerWidget* parent = 0);
+                            model::muda_dptr muda);
                     ~ro_muda_widget();
 
                 private:

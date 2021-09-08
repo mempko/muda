@@ -17,13 +17,14 @@
 * along with Muda.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <Wt/WGlobal.h>
 #include <fstream>
 #include <functional>
 #include <memory>
 
-#include <Wt/WApplication>
-#include <Wt/WServer>
-#include <Wt/WEnvironment>
+#include <Wt/WApplication.h>
+#include <Wt/WServer.h>
+#include <Wt/WEnvironment.h>
 
 #include <boost/optional.hpp>
 #include <boost/regex.hpp>
@@ -32,13 +33,8 @@
 #include "wtui/ro_user.h"
 
 using namespace Wt;
-namespace ph = std::placeholders;
 
-namespace m = mempko::muda;
-namespace mm = mempko::muda::model;
-namespace mc = mempko::muda::context;
 namespace mt = mempko::muda::wt;
-namespace mu = mempko::muda::util;
 
 int main(int argc, char **argv)
 try 
@@ -46,8 +42,8 @@ try
     Wt::WServer server{argv[0]};
 
     server.setServerConfiguration(argc, argv, WTHTTP_CONFIGURATION);
-    server.addEntryPoint(Wt::Application, mt::create_application);
-    server.addEntryPoint(Wt::Application, mt::create_ro_user_application, mt::RO_APP_PATH);
+    server.addEntryPoint(Wt::EntryPointType::Application, mt::create_application);
+    server.addEntryPoint(Wt::EntryPointType::Application, mt::create_ro_user_application, mt::RO_APP_PATH);
 
     mt::session::configure_auth();
 

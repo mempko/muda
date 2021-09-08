@@ -22,12 +22,13 @@
 
 #include <boost/function.hpp>
 
-#include <Wt/WCompositeWidget>
-#include <Wt/WContainerWidget>
-#include <Wt/WLineEdit>
-#include <Wt/WImage>
-#include <Wt/WLabel>
-#include <Wt/WHBoxLayout>
+#include <Wt/WCompositeWidget.h>
+#include <Wt/WContainerWidget.h>
+#include <Wt/WLineEdit.h>
+#include <Wt/WImage.h>
+#include <Wt/WLabel.h>
+#include <Wt/WHBoxLayout.h>
+#include <memory>
 
 #include "wtui/mudawidget.h"
 
@@ -48,8 +49,7 @@ namespace mempko
                     muda_list_widget(
                             dbo::Session& s,
                             model::muda_list_dptr mudas, 
-                            mutate_func mut, 
-                            Wt::WContainerWidget* parent = 0);
+                            mutate_func mut);
                     ~muda_list_widget();
 
                 public:

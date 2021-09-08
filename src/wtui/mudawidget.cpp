@@ -20,7 +20,7 @@
 #include "wtui/mudawidget.h"
 #include "core/dbc.h"
 
-#include <Wt/WLength>
+#include <Wt/WLength.h>
 #include <sstream>
 #include <chrono>
 #include <ctime>
@@ -40,12 +40,8 @@ namespace mempko
             {
                 std::string timestamp(time pt)
                 {
-                    using namespace boost::posix_time;
-                    using namespace boost::gregorian;
-
-                    time epoch{boost::gregorian::date(1970, 1, 1)};
-                    auto x = (pt - epoch).total_seconds();
-                    auto t = time_t(x);
+                    auto x = pt.time_since_epoch()* std::chrono::system_clock::period::num / std::chrono::system_clock::period::den;
+                    auto t = time_t(x.count());
 
                     char str[20];
                     if(std::strftime(str, sizeof(str), "%b %d %I:%M:%S", std::localtime(&t))) 
@@ -57,9 +53,8 @@ namespace mempko
 
             muda_widget::muda_widget(
                     dbo::Session& s,
-                    model::muda_dptr muda, 
-                    w::WContainerWidget* parent) :
-                w::WContainerWidget{parent},
+                    model::muda_dptr muda) :
+                w::WContainerWidget{},
                 _muda{muda}, _session{s}
             {
                 REQUIRE(muda);
@@ -80,13 +75,15 @@ namespace mempko
                 INVARIANT(_muda);
 
                 //create text editor
-                _edit = new w::WLineEdit;
+                auto edit = std::make_unique<w::WLineEdit>();
+                _edit = edit.get();
+
                 //set text to muda text
-                _edit->setText(_muda->text());
+                edit->setText(_muda->text());
 
                 //when enter is pressed change the model
-                _edit->keyWentDown().connect(this, &muda_widget::text_changed);
-                _edit->enterPressed().connect(this, &muda_widget::change_text);
+                edit->keyWentDown().connect(this, &muda_widget::text_changed);
+                edit->enterPressed().connect(this, &muda_widget::change_text);
 
                 //when the model changes the text or type
                 _when_text_changes = _muda.modify()->when_text_changes(
@@ -95,31 +92,36 @@ namespace mempko
                         bind(&muda_widget::update_type, this));
 
                 //delete button
-                _delete_button = new w::WLabel{"&#10060;"};
+                auto delete_button = std::make_unique<w::WLabel>("&#10060;");
+                _delete_button = delete_button.get();
                 _delete_button->setStyleClass("btn muda-delete");
                 _delete_button->setToolTip("erase");
                 _delete_button->doubleClicked().connect(this, &muda_widget::delete_pressed);
 
                 //type button
-                _date = new w::WLabel{""};
-                _type = new w::WLabel{"now"};
-                _type->clicked().connect(this, &muda_widget::type_pressed);
+                auto date = std::make_unique<w::WLabel>("");
+                _date = date.get();
+                auto type = std::make_unique<w::WLabel>("now");
+                _type = type.get();
+                type->clicked().connect(this, &muda_widget::type_pressed);
                 update_type();
                 show_buttons();
 
-                //layout
-                _layout = new w::WHBoxLayout();
-                _layout->setSpacing(8);
-                _layout->addWidget(_edit);
-                _layout->setStretchFactor(_edit, 1);
-                _layout->addWidget(_date);
-                _layout->addWidget(_type);
-                _layout->addWidget(_delete_button);
-                _layout->setContentsMargins(0,0,0,0);
 
-                setLayout(_layout);
+                //layout
+                auto layout = std::make_unique<w::WHBoxLayout>();
+                _layout = layout.get();
+                layout->setSpacing(8);
+                layout->addWidget(std::move(edit));
+                layout->setStretchFactor(_edit, 1);
+                layout->addWidget(std::move(date));
+                layout->addWidget(std::move(type));
+                layout->addWidget(std::move(delete_button));
+                layout->setContentsMargins(0,0,0,0);
+
+                setLayout(std::move(layout));
                 setStyleClass("muda-container");
-                resize(w::WLength(100, w::WLength::Percentage), w::WLength::Auto);
+                resize(w::WLength(100, w::WLength::Unit::Percentage), w::WLength::Auto);
 
                 ENSURE(_edit);
                 ENSURE(_layout);
@@ -263,11 +265,7 @@ namespace mempko
                 auto text_modified_date = _muda->modified();
                 auto type_modified_date = _muda->type().modified();
 
-                CHECK_FALSE(text_modified_date.is_not_a_date_time());
-                
-                auto date = type_modified_date.is_not_a_date_time() ? 
-                    text_modified_date :
-                    std::max(text_modified_date, type_modified_date);
+                auto date = std::max(text_modified_date, type_modified_date);
 
                 _date->setText(timestamp(date));
             }
