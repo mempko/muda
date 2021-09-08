@@ -72,6 +72,7 @@ namespace mempko::muda::wt
 
         //create new muda widget and add it to widget list
         auto new_widget = std::make_unique<muda_widget>(_session, muda);
+        auto new_widget_p = new_widget.get();
 
         _connections.push_back(new_widget->when_delete_pressed(
                     [this](auto id, auto widget) { 
@@ -80,11 +81,11 @@ namespace mempko::muda::wt
         _connections.push_back(new_widget->when_type_pressed(
                     [this]() { fire_update_sig(); }));
 
-        _muda_widgets.push_back(new_widget.get());
 
         if(_muda_widgets.empty()) _root->addWidget(std::move(new_widget));
         else _root->insertBefore(std::move(new_widget), _muda_widgets.back());
 
+        _muda_widgets.push_back(new_widget_p);
     }
 
     void muda_list_widget::remove_muda(id_type id, muda_widget* widget)

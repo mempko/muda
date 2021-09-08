@@ -60,10 +60,11 @@ namespace mempko::muda::wt
 
         //create new muda widget and add it to widget list
         auto new_widget = std::make_unique<ro_muda_widget>(_session, muda);
-        _muda_widgets.push_back(new_widget.get());
+        auto new_widget_p = new_widget.get();
 
         if(_muda_widgets.empty()) _root->addWidget(std::move(new_widget));
         else _root->insertBefore(std::move(new_widget), _muda_widgets.back());
 
+        _muda_widgets.push_back(new_widget_p);
     }
 }
