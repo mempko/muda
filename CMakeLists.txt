@@ -18,7 +18,7 @@ cmake_minimum_required(VERSION 2.6)
 project(muda)
 
 #use C++11
-ADD_DEFINITIONS(-std=c++14)
+ADD_DEFINITIONS(-std=c++17)
 
 #setup boost
 set(Boost_USE_STATIC_LIBS on)
@@ -26,12 +26,14 @@ set(Boost_USE_STATIC_LIBS on)
 if(APPLE)
     set(Boost_LIBRARY_DIRS /opt/local/lib)
     set(Boost_INCLUDE_DIRS /opt/local/include)
-    set(Boost_LIBRARIES boost_system boost_thread boost_regex boost_filesystem boost_date_time boost_serialization boost_signals boost_program_options)
+    set(Boost_LIBRARIES boost_system boost_thread boost_regex boost_filesystem boost_date_time boost_serialization boost_program_options)
 else()
-	find_package(Boost 1.58 COMPONENTS filesystem date_time serialization regex signals thread system)
+	find_package(Boost COMPONENTS filesystem date_time serialization regex thread system)
 endif()
 
 link_directories(${Boost_LIBRARY_DIRS})
+link_directories(/usr/local/lib)
+include_directories(/usr/local/include)
 include_directories(${Boost_INCLUDE_DIRS})
 
 add_subdirectory(src)
