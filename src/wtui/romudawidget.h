@@ -33,39 +33,32 @@
 #include "core/muda.h"
 #include "core/context.h"
 
-namespace mempko 
+namespace mempko::muda::wt 
 { 
-    namespace muda 
-    { 
-        namespace wt 
-        { 
+    class ro_muda_widget : public Wt::WContainerWidget
+    {
+        public:
+            ro_muda_widget(
+                    dbo::Session& s,
+                    model::muda_dptr muda);
+            ~ro_muda_widget();
 
-            class ro_muda_widget : public Wt::WContainerWidget
-            {
-                public:
-                    ro_muda_widget(
-                            dbo::Session& s,
-                            model::muda_dptr muda);
-                    ~ro_muda_widget();
+        private:
+            void create_ui();
+            void set_style();
+            void set_date();
 
-                private:
-                    void create_ui();
-                    void set_style();
-                    void set_date();
+        private:
+            model::muda_dptr _muda;
+            Wt::WContainerWidget* _root;
+            Wt::WHBoxLayout* _layout;
+            Wt::WLabel* _text;
+            Wt::WLabel* _date;
+            dbo::Session& _session;
+    };
 
-                private:
-                    model::muda_dptr _muda;
-                    Wt::WContainerWidget* _root;
-                    Wt::WHBoxLayout* _layout;
-                    Wt::WLabel* _text;
-                    Wt::WLabel* _date;
-                    dbo::Session& _session;
-            };
+    typedef std::list<ro_muda_widget*> ro_muda_widget_list;
 
-            typedef std::list<ro_muda_widget*> ro_muda_widget_list;
-
-        }
-    }
 }
 
 #endif

@@ -23,17 +23,13 @@
 #include <chrono>
 #include <string>
 
-namespace mempko 
+namespace mempko::muda 
 { 
-    namespace muda 
-    {
-        using text_type = std::string;
-        using id_type = long;
-        enum muda_state { NOW, LATER, DONE, NOTE};
+    using text_type = std::string;
+    using id_type = long;
+    enum muda_state { NOW, LATER, DONE, NOTE};
 
-        //using date = boost::gregorian::date;
-        using time = std::chrono::system_clock::time_point;
-
-    }
+    //using date = boost::gregorian::date;
+    using time = std::chrono::system_clock::time_point;
 }
 #endif

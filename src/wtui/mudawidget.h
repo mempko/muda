@@ -33,66 +33,58 @@
 #include "core/muda.h"
 #include "core/context.h"
 
-namespace mempko 
+namespace mempko::muda::wt 
 { 
-    namespace muda 
-    { 
-        namespace wt 
-        { 
+    class muda_widget : public Wt::WContainerWidget
+    {
+        public:
+            muda_widget(
+                    dbo::Session& s,
+                    model::muda_dptr muda);
+            ~muda_widget();
 
-            class muda_widget : public Wt::WContainerWidget
-            {
-                public:
-                    muda_widget(
-                            dbo::Session& s,
-                            model::muda_dptr muda);
-                    ~muda_widget();
+        public:
+            typedef boost::signals2::connection connection;
+            typedef boost::signals2::signal<void (id_type, muda_widget*)> delete_sig;
+            typedef delete_sig::slot_type delete_slot;
+            connection when_delete_pressed(const delete_slot& slot);
 
-                public:
-                    typedef boost::signals2::connection connection;
-                    typedef boost::signals2::signal<void (id_type, muda_widget*)> delete_sig;
-                    typedef delete_sig::slot_type delete_slot;
-                    connection when_delete_pressed(const delete_slot& slot);
+            typedef boost::signals2::signal<void ()> type_sig;
+            typedef type_sig::slot_type type_slot;
+            connection when_type_pressed(const type_slot& slot);
 
-                    typedef boost::signals2::signal<void ()> type_sig;
-                    typedef type_sig::slot_type type_slot;
-                    connection when_type_pressed(const type_slot& slot);
+        private:
+            void create_ui();
+            void change_text();
+            void text_changed();
+            void update_text();
+            void show_buttons();
+            void hide_buttons();
+            void update_type();
+            void type_pressed();
+            void delete_pressed();
+            void update_date();
+            void set_style();
 
-                private:
-                    void create_ui();
-                    void change_text();
-                    void text_changed();
-                    void update_text();
-                    void show_buttons();
-                    void hide_buttons();
-                    void update_type();
-                    void type_pressed();
-                    void delete_pressed();
-                    void update_date();
-                    void set_style();
+        private:
+            model::muda_dptr _muda;
+            boost::signals2::connection _when_text_changes;
+            boost::signals2::connection _when_type_changes;
+            Wt::WContainerWidget* _root;
+            Wt::WHBoxLayout* _layout;
+            Wt::WLineEdit* _edit;
+            Wt::WLabel* _delete_button;
+            Wt::WLabel* _date;
+            Wt::WLabel* _type;
+            delete_sig _delete_sig;
+            type_sig _type_sig;
+            dbo::Session& _session;
+            bool _dirty = false;
+            bool _enter = false;
 
-                private:
-                    model::muda_dptr _muda;
-                    boost::signals2::connection _when_text_changes;
-                    boost::signals2::connection _when_type_changes;
-                    Wt::WContainerWidget* _root;
-                    Wt::WHBoxLayout* _layout;
-                    Wt::WLineEdit* _edit;
-                    Wt::WLabel* _delete_button;
-                    Wt::WLabel* _date;
-                    Wt::WLabel* _type;
-                    delete_sig _delete_sig;
-                    type_sig _type_sig;
-                    dbo::Session& _session;
-                    bool _dirty = false;
-                    bool _enter = false;
+    };
 
-            };
+    typedef std::list<muda_widget*> muda_widget_list;
 
-            typedef std::list<muda_widget*> muda_widget_list;
-
-        }
-    }
 }
-
 #endif

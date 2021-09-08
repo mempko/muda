@@ -32,55 +32,48 @@
 
 #include "wtui/mudawidget.h"
 
-namespace mempko 
+namespace mempko::muda::wt 
 { 
-    namespace muda 
-    { 
-        namespace wt 
-        { 
+    typedef std::list<boost::signals2::connection> connections;
+    using muda_vec = std::vector<model::muda_dptr>;
 
-            typedef std::list<boost::signals2::connection> connections;
-            using muda_vec = std::vector<model::muda_dptr>;
+    class muda_list_widget : public Wt::WCompositeWidget
+    {
+        public:
+            typedef boost::function<void (muda_vec&)> mutate_func;
+            muda_list_widget(
+                    dbo::Session& s,
+                    model::muda_list_dptr mudas, 
+                    mutate_func mut);
+            ~muda_list_widget();
 
-            class muda_list_widget : public Wt::WCompositeWidget
+        public:
+            typedef boost::signals2::connection connection;
+            typedef boost::signals2::signal<void ()> update_sig;
+            typedef update_sig::slot_type update_slot;
+
+            auto when_model_updated(const update_slot& slot)
             {
-                public:
-                    typedef boost::function<void (muda_vec&)> mutate_func;
-                    muda_list_widget(
-                            dbo::Session& s,
-                            model::muda_list_dptr mudas, 
-                            mutate_func mut);
-                    ~muda_list_widget();
+                return _update_sig.connect(slot);
+            }
 
-                public:
-                    typedef boost::signals2::connection connection;
-                    typedef boost::signals2::signal<void ()> update_sig;
-                    typedef update_sig::slot_type update_slot;
+        public:
+            void add_muda(model::muda_dptr muda);
 
-                    auto when_model_updated(const update_slot& slot)
-                    {
-                        return _update_sig.connect(slot);
-                    }
+        private:
+            void create_ui(mutate_func);
+            void remove_muda(id_type id, muda_widget* widget);
+            void fire_update_sig();
+            void clear_connections();
 
-                public:
-                    void add_muda(model::muda_dptr muda);
+        private:
+            model::muda_list_dptr _mudas;
+            muda_widget_list _muda_widgets;
+            update_sig _update_sig;
+            Wt::WContainerWidget* _root;
+            dbo::Session& _session;
 
-                private:
-                    void create_ui(mutate_func);
-                    void remove_muda(id_type id, muda_widget* widget);
-                    void fire_update_sig();
-                    void clear_connections();
-
-                private:
-                    model::muda_list_dptr _mudas;
-                    muda_widget_list _muda_widgets;
-                    update_sig _update_sig;
-                    Wt::WContainerWidget* _root;
-                    dbo::Session& _session;
-
-                    connections _connections;
-            };
-        }
-    }
+            connections _connections;
+    };
 }
 #endif

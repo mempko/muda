@@ -20,96 +20,90 @@
 #include "wtui/mudalistwidget.h"
 #include <memory>
 
-namespace mempko 
+namespace mempko::muda::wt
 { 
-    namespace muda 
-    { 
-        namespace wt 
-        { 
-            using boost::bind;
-            using boost::mem_fn;
-            namespace w = Wt;
+    using boost::bind;
+    using boost::mem_fn;
+    namespace w = Wt;
 
-            muda_list_widget::muda_list_widget(
-                    dbo::Session& s,
-                    model::muda_list_dptr mudas, 
-                    muda_list_widget::mutate_func mut) :
-                w::WCompositeWidget{},
-                _mudas{mudas}, _session{s}
-            {
-                auto root = std::make_unique<w::WContainerWidget>();
-                _root = root.get();
-                setImplementation(std::move(root));
-                create_ui(mut);
-            }
+    muda_list_widget::muda_list_widget(
+            dbo::Session& s,
+            model::muda_list_dptr mudas, 
+            muda_list_widget::mutate_func mut) :
+        w::WCompositeWidget{},
+        _mudas{mudas}, _session{s}
+    {
+        auto root = std::make_unique<w::WContainerWidget>();
+        _root = root.get();
+        setImplementation(std::move(root));
+        create_ui(mut);
+    }
 
-            muda_list_widget::~muda_list_widget()
-            {
-                clear_connections();
-            }
+    muda_list_widget::~muda_list_widget()
+    {
+        clear_connections();
+    }
 
-            void muda_list_widget::clear_connections()
-            {
-                for(auto c : _connections) c.disconnect();
-                _connections.clear();
-            }
+    void muda_list_widget::clear_connections()
+    {
+        for(auto c : _connections) c.disconnect();
+        _connections.clear();
+    }
 
-            void muda_list_widget::create_ui(muda_list_widget::mutate_func mut)
-            {
-                dbo::Transaction t{_session};
-                _root->resize(w::WLength(100, w::WLength::Unit::Percentage), w::WLength::Auto);
+    void muda_list_widget::create_ui(muda_list_widget::mutate_func mut)
+    {
+        dbo::Transaction t{_session};
+        _root->resize(w::WLength(100, w::WLength::Unit::Percentage), w::WLength::Auto);
 
-                const auto& list = _mudas->list();
+        const auto& list = _mudas->list();
 
-                auto vec = muda_vec{std::begin(list), std::end(list)};
-                mut(vec);
+        auto vec = muda_vec{std::begin(list), std::end(list)};
+        mut(vec);
 
-                for(const auto& m : vec) add_muda(m);
-            }
+        for(const auto& m : vec) add_muda(m);
+    }
 
-            void muda_list_widget::add_muda(model::muda_dptr muda)
-            {
-                REQUIRE(muda);
+    void muda_list_widget::add_muda(model::muda_dptr muda)
+    {
+        REQUIRE(muda);
 
-                _connections.push_back(muda.modify()->when_text_changes(
-                            [this]() { fire_update_sig();}));
+        _connections.push_back(muda.modify()->when_text_changes(
+                    [this]() { fire_update_sig();}));
 
-                //create new muda widget and add it to widget list
-                auto new_widget = std::make_unique<muda_widget>(_session, muda);
+        //create new muda widget and add it to widget list
+        auto new_widget = std::make_unique<muda_widget>(_session, muda);
 
-                _connections.push_back(new_widget->when_delete_pressed(
-                            [this](auto id, auto widget) { 
-                                remove_muda(id, widget);
-                            }));
-                _connections.push_back(new_widget->when_type_pressed(
-                            [this]() { fire_update_sig(); }));
+        _connections.push_back(new_widget->when_delete_pressed(
+                    [this](auto id, auto widget) { 
+                    remove_muda(id, widget);
+                    }));
+        _connections.push_back(new_widget->when_type_pressed(
+                    [this]() { fire_update_sig(); }));
 
-                _muda_widgets.push_back(new_widget.get());
+        _muda_widgets.push_back(new_widget.get());
 
-                if(_muda_widgets.empty()) _root->addWidget(std::move(new_widget));
-                else _root->insertBefore(std::move(new_widget), _muda_widgets.back());
+        if(_muda_widgets.empty()) _root->addWidget(std::move(new_widget));
+        else _root->insertBefore(std::move(new_widget), _muda_widgets.back());
 
-            }
+    }
 
-            void muda_list_widget::remove_muda(id_type id, muda_widget* widget)
-            {
-                REQUIRE(widget);
-                dbo::Transaction t{_session};
+    void muda_list_widget::remove_muda(id_type id, muda_widget* widget)
+    {
+        REQUIRE(widget);
+        dbo::Transaction t{_session};
 
-                auto remove = context::remove_muda{id, *(_mudas.modify())}; 
-                remove();
+        auto remove = context::remove_muda{id, *(_mudas.modify())}; 
+        remove();
 
-                fire_update_sig();
-                
-                _muda_widgets.remove(widget);
-                _root->removeWidget(widget);
-            }
+        fire_update_sig();
 
-            void muda_list_widget::fire_update_sig()
-            {
-                INVARIANT(this);
-                _update_sig();
-            }
-        }
+        _muda_widgets.remove(widget);
+        _root->removeWidget(widget);
+    }
+
+    void muda_list_widget::fire_update_sig()
+    {
+        INVARIANT(this);
+        _update_sig();
     }
 }

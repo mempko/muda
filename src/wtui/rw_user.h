@@ -44,87 +44,81 @@
 #include "wtui/mudalistwidget.h"
 #include "wtui/session.h"
 
-namespace mempko 
+namespace mempko::muda::wt
 { 
-    namespace muda 
-    { 
-        namespace wt 
-        { 
-            using optional_regex = boost::optional<boost::regex>;
+    using optional_regex = boost::optional<boost::regex>;
 
-            class rw_user : public Wt::WApplication
-            {
-                public:
-                    rw_user(const Wt::WEnvironment& env);
-                private:
-                    void set_view();
-                    void login_screen();
-                    void settings_screen();
-                    void oauth_event();
-                    void startup_muda_screen();
-                    void setup_view();
-                    void create_header_ui();
-                    void logout();
-                    void triage_view();
-                    void now_view();
-                    void later_view();
-                    void done_view();
-                    void note_view();
-                    std::unique_ptr<Wt::WContainerWidget> create_menu();
+    class rw_user : public Wt::WApplication
+    {
+        public:
+            rw_user(const Wt::WEnvironment& env);
+        private:
+            void set_view();
+            void login_screen();
+            void settings_screen();
+            void oauth_event();
+            void startup_muda_screen();
+            void setup_view();
+            void create_header_ui();
+            void logout();
+            void triage_view();
+            void now_view();
+            void later_view();
+            void done_view();
+            void note_view();
+            std::unique_ptr<Wt::WContainerWidget> create_menu();
 
-                private:
-                    bool do_search();
-                    void add_new_triage_muda(muda_list_widget* mudas);
-                    void add_new_now_muda(muda_list_widget* mudas);
-                    void add_new_later_muda(muda_list_widget* mudas);
-                    void add_new_done_muda(muda_list_widget* mudas);
-                    void add_new_note_muda(muda_list_widget* mudas);
-                    model::muda_dptr add_new_muda();
-                    void add_muda_to_list_widget(model::muda_dptr muda, muda_list_widget*);
+        private:
+            bool do_search();
+            void add_new_triage_muda(muda_list_widget* mudas);
+            void add_new_now_muda(muda_list_widget* mudas);
+            void add_new_later_muda(muda_list_widget* mudas);
+            void add_new_done_muda(muda_list_widget* mudas);
+            void add_new_note_muda(muda_list_widget* mudas);
+            model::muda_dptr add_new_muda();
+            void add_muda_to_list_widget(model::muda_dptr muda, muda_list_widget*);
 
-                private:
-                    bool filter_by_search(model::muda_dptr muda);
-                    bool filter_by_now(model::muda_dptr muda);
-                    bool filter_by_later(model::muda_dptr muda);
-                    bool filter_by_done(model::muda_dptr muda);
-                    bool filter_by_note(model::muda_dptr muda);
-                    void make_now_view(muda_vec&);
-                    void make_later_view(muda_vec&);
-                    void make_done_view(muda_vec&);
-                    void make_note_view(muda_vec&);
-                    void make_prioritize_view(muda_vec&);
-                    void set_search();
-                    void clear_search();
+        private:
+            bool filter_by_search(model::muda_dptr muda);
+            bool filter_by_now(model::muda_dptr muda);
+            bool filter_by_later(model::muda_dptr muda);
+            bool filter_by_done(model::muda_dptr muda);
+            bool filter_by_note(model::muda_dptr muda);
+            void make_now_view(muda_vec&);
+            void make_later_view(muda_vec&);
+            void make_done_view(muda_vec&);
+            void make_note_view(muda_vec&);
+            void make_prioritize_view(muda_vec&);
+            void set_search();
+            void clear_search();
 
-                private:
-                    void clear_connections();
-                    void save_mudas();
-                    void load_user();
+        private:
+            void clear_connections();
+            void save_mudas();
+            void load_user();
 
-                private:
-                    void handle_path();
+        private:
+            void handle_path();
 
-                private:
-                    //login widgets
-                    optional_regex _search;
-                    optional_regex _set_search;
-                    text_type _user_name = "unknown";
-                    text_type _user_email = "unknown";
-                    wo::AuthWidget* _authw = nullptr;
-                    connections _connections;
+        private:
+            //login widgets
+            optional_regex _search;
+            optional_regex _set_search;
+            text_type _user_name = "unknown";
+            text_type _user_email = "unknown";
+            wo::AuthWidget* _authw = nullptr;
+            connections _connections;
 
-                private:
-                    //muda widgets
-                    Wt::WLineEdit* _new_muda = nullptr;
-                    session_ptr _session;
-                    model::user_dptr _user;
-                    model::muda_list_dptr _mudas;
+        private:
+            //muda widgets
+            Wt::WLineEdit* _new_muda = nullptr;
+            session_ptr _session;
+            model::user_dptr _user;
+            model::muda_list_dptr _mudas;
 
-            };
+    };
 
-            std::unique_ptr<Wt::WApplication> create_application(const Wt::WEnvironment& env);
-        }
-    }
+    std::unique_ptr<Wt::WApplication> create_application(const Wt::WEnvironment& env);
 }
 
 #endif

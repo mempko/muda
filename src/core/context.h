@@ -26,128 +26,121 @@
 #include "core/roles.h"
 #include "core/dbc.h"
 
-namespace mempko 
+namespace mempko::muda::context
 { 
-    namespace muda 
-    { 
-        namespace context 
+    template <class m>
+        class modify_text_context 
         {
-            template <class m>
-                class modify_text_context 
+            public:
+                modify_text_context(
+                        role::modifiable_object<m, text_type>& md, 
+                        const text_type& text) : 
+                    _m{md}, _text{text} {}
+
+                void operator()()
                 {
-                    public:
-                        modify_text_context(
-                                role::modifiable_object<m, text_type>& md, 
-                                const text_type& text) : 
-                            _m{md}, _text{text} {}
+                    _m.change(_text);
+                }
 
-                        void operator()()
-                        {
-                            _m.change(_text);
-                        }
+            private:
+                role::modifiable_object<m, text_type>& _m;
+                text_type _text;
+        };
 
-                    private:
-                        role::modifiable_object<m, text_type>& _m;
-                        text_type _text;
-                };
+    template <class m, class list_type>
+        class set_incremental_id
+        {
+            public:
+                set_incremental_id(
+                        role::id_reciever<m>& md, 
+                        const role::iterable<list_type>& list) :
+                    _m{md}, _list{list} {}
 
-            template <class m, class list_type>
-                class set_incremental_id
+                void operator()()
                 {
-                    public:
-                        set_incremental_id(
-                                role::id_reciever<m>& md, 
-                                const role::iterable<list_type>& list) :
-                            _m{md}, _list{list} {}
+                    //find max
+                    using list_value = typename list_type::value_type;
+                    auto cp = std::vector<list_value>{std::begin(_list), std::end(_list)};
+                    auto max = std::max_element(
+                            std::begin(cp), std::end(cp), 
+                            [](const auto& a, const auto& b) 
+                            {
+                            REQUIRE(a); REQUIRE(b);
+                            return a->id() < b->id();
+                            });
 
-                        void operator()()
-                        {
-                            //find max
-                            using list_value = typename list_type::value_type;
-                            auto cp = std::vector<list_value>{std::begin(_list), std::end(_list)};
-                            auto max = std::max_element(
-                                    std::begin(cp), std::end(cp), 
-                                    [](const auto& a, const auto& b) 
-                                    {
-                                        REQUIRE(a); REQUIRE(b);
-                                        return a->id() < b->id();
-                                    });
+                    //increment
+                    auto id = max != cp.end() ? (*max)->id() + 1: 0;
 
-                            //increment
-                            auto id = max != cp.end() ? (*max)->id() + 1: 0;
+                    //set
+                    _m.recieve(id);                    
+                } 
 
-                            //set
-                            _m.recieve(id);                    
-                        } 
+            private:
+                role::id_reciever<m>& _m;
+                const role::iterable<list_type>& _list;
+        };
 
-                    private:
-                        role::id_reciever<m>& _m;
-                        const role::iterable<list_type>& _list;
-                };
-
-            template <class m, class m_ptr, class list>
-                class add_object
+    template <class m, class m_ptr, class list>
+        class add_object
+        {
+            public:
+                add_object(m_ptr mp, list& l) : 
+                    _m{mp}, _list{l} 
                 {
-                    public:
-                        add_object(m_ptr mp, list& l) : 
-                            _m{mp}, _list{l} 
-                    {
-                        REQUIRE(mp);
-                        ENSURE(_m);
-                    }
+                    REQUIRE(mp);
+                    ENSURE(_m);
+                }
 
-                    void operator()()
-                    {
-                        using list_type = typename list::list_type;
-
-                        auto mm = _m.modify();
-                        auto set_id = set_incremental_id<m, list_type>{*mm, _list};
-
-                        set_id();
-                        mm->stamp();
-                        _list.add(_m);
-                    }
-
-                    private:
-                        m_ptr _m;
-                        list& _list;
-                };
-
-            template<class container, class id>
-                class remove_object
+                void operator()()
                 {
-                    public:
-                        remove_object(
-                                id v, 
-                                role::removable<id>& removable) :
-                            _id(v), _removable(removable) {}
-                        void operator()()
-                        {
-                            const bool removed = _removable.remove(_id);
-                            ENSURE(removed);
-                        }
-                    private:
-                        id _id;
-                        role::removable<id>& _removable;
-                };
+                    using list_type = typename list::list_type;
 
-            class transition_state
+                    auto mm = _m.modify();
+                    auto set_id = set_incremental_id<m, list_type>{*mm, _list};
+
+                    set_id();
+                    mm->stamp();
+                    _list.add(_m);
+                }
+
+            private:
+                m_ptr _m;
+                list& _list;
+        };
+
+    template<class container, class id>
+        class remove_object
+        {
+            public:
+                remove_object(
+                        id v, 
+                        role::removable<id>& removable) :
+                    _id(v), _removable(removable) {}
+                void operator()()
+                {
+                    const bool removed = _removable.remove(_id);
+                    ENSURE(removed);
+                }
+            private:
+                id _id;
+                role::removable<id>& _removable;
+        };
+
+    class transition_state
+    {
+        public:
+            transition_state(role::transitional_object& obj) : _obj(obj) {}
+            void operator()()
             {
-                public:
-                    transition_state(role::transitional_object& obj) : _obj(obj) {}
-                    void operator()()
-                    {
-                        _obj.transition();
-                    }
+                _obj.transition();
+            }
 
-                private:
-                    role::transitional_object& _obj;
-            };
+        private:
+            role::transitional_object& _obj;
+    };
 
-        }
-    }
 }
-
 
 #endif
 
