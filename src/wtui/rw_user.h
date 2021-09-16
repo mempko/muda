@@ -106,7 +106,7 @@ namespace mempko::muda::wt
             optional_regex _set_search;
             text_type _user_name = "unknown";
             text_type _user_email = "unknown";
-            wo::AuthWidget* _authw = nullptr;
+            std::unique_ptr<wo::AuthWidget> _authw;
             connections _connections;
 
         private:

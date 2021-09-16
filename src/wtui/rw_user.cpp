@@ -73,8 +73,8 @@ namespace mempko::muda::wt
         _session->login().changed().connect(this, &rw_user::oauth_event);
 
         internalPathChanged().connect(this, &rw_user::handle_path);
-        std::make_unique<WAnchor>(WLink(WLink::Type::InternalPath, "/mempko"),
-                "/mempko");
+        //std::make_unique<WAnchor>(WLink(WLink::Type::InternalPath, "/mempko"),
+        //        "/mempko");
         Wt::log("info") << "internal paht: " << internalPath();
         set_view();
 
@@ -95,7 +95,6 @@ namespace mempko::muda::wt
         auth_model->addOAuth(session::oauth());
 
         auto authw = std::make_unique<wo::AuthWidget>(_session->login());
-        _authw = authw.get(); 
         authw->setModel(std::move(auth_model));
         authw->setRegistrationEnabled(true);
         authw->processEnvironment();
@@ -123,20 +122,17 @@ namespace mempko::muda::wt
         CHECK(_new_muda);
         _new_muda->hide();
 
-        root()->addWidget(std::make_unique<WText>(_user_name));
+        _authw = std::make_unique<wo::AuthWidget>(_session->login());
 
         auto auth_model = std::make_unique<wo::AuthModel>(session::auth(), _session->users());
         auth_model->addPasswordAuth(&session::password_auth());
         auth_model->addOAuth(session::oauth());
 
-        auto authw = std::make_unique<wo::AuthWidget>(_session->login());
-        _authw = authw.get();
+        _authw->setModel(std::move(auth_model));
 
-        auto pw = _authw->createUpdatePasswordView(_session->login().user(), true);
+        auto usr = _session->login().user();
+        auto pw = _authw->createUpdatePasswordView(usr, true);
         root()->addWidget(std::move(pw));
-
-        authw->setModel(std::move(auth_model));
-
 
         ENSURE(_user);
         ENSURE(_mudas);
@@ -145,9 +141,9 @@ namespace mempko::muda::wt
     void rw_user::handle_path()
     {
         auto internal_path = internalPath();
-        if (_session->login().loggedIn()) {
+        if (_session->login().loggedIn()) 
+        {
             Wt::log("info") << "logged in. path: " << internal_path;
-            //WApplication::instance()->setInternalPath("/play",  true);
         }
         else
         {
