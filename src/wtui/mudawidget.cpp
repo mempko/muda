@@ -86,22 +86,25 @@ namespace mempko::muda::wt
         _when_type_changes = _muda.modify()->type().when_type_changes(
                 bind(&muda_widget::update_type, this));
 
-        //delete button
-        auto delete_button = std::make_unique<w::WLabel>("&#10060;");
-        _delete_button = delete_button.get();
-        _delete_button->setStyleClass("btn muda-delete");
-        _delete_button->setToolTip("erase");
-        _delete_button->doubleClicked().connect(this, &muda_widget::delete_pressed);
-
         //type button
-        auto date = std::make_unique<w::WLabel>("");
-        _date = date.get();
         auto type = std::make_unique<w::WLabel>("now");
         _type = type.get();
         type->clicked().connect(this, &muda_widget::type_pressed);
+
+        //date label
+        auto date = std::make_unique<w::WLabel>("");
+        _date = date.get();
+
+        //delete button
+        auto delete_button = std::make_unique<w::WLabel>("x");
+        _delete_button = delete_button.get();
+        _delete_button->setStyleClass("btn muda-delete");
+        _delete_button->setToolTip("double-click to erase");
+        _delete_button->doubleClicked().connect(this, &muda_widget::delete_pressed);
+
+
         update_type();
         show_buttons();
-
 
         //layout
         auto layout = std::make_unique<w::WHBoxLayout>();
@@ -109,8 +112,8 @@ namespace mempko::muda::wt
         layout->setSpacing(8);
         layout->addWidget(std::move(edit));
         layout->setStretchFactor(_edit, 1);
-        layout->addWidget(std::move(date));
         layout->addWidget(std::move(type));
+        layout->addWidget(std::move(date));
         layout->addWidget(std::move(delete_button));
         layout->setContentsMargins(0,0,0,0);
 

@@ -1,169 +1,325 @@
+/* Core variables */
+:root {
+  /* Core semantic colors */
+  --primary: #4f46e5;
+  --success: #10b981;    /* Fresh green */
+  --warning: #f59e0b;    /* Warm amber */
+  --done: #64748b;       /* Slate blue-gray for done */
+  --note: #8b5cf6;       /* Purple for note */
+  --neutral: #6b7280;    /* Balanced gray */
+  --danger: #ef4444;     /* Clear red */
+  --background: #ffffff; /* Pure white */
+  --text: #1f2937;      /* Deep gray for text */
+  --border: #e5e7eb;    /* Light gray for borders */
 
-.login-header {
-  background-repeat:repeat-x;
-  background: url(images/background.png) repeat-x left top;
-  text-align: center;
-  height: 250px;
-  font-size: 15em;
-  color: #b8ddff;
-  text-shadow: 1px 1px 10px #000;
-  font-family:tahoma, arial, sans-serif;
+  /* Button & task background colors - slightly muted but professional */
+  --bg-primary: #eff6ff; /* Light blue with better contrast */
+  --bg-success: #ecfdf5; /* Minty green, easier on eyes */
+  --bg-warning: #fffbeb; /* Soft amber, professional */
+  --bg-neutral: #f3f4f6; /* Clean gray */
+  --bg-note: #f5f3ff;    /* Gentle purple tint */
+
+  /* Button active/hover states */
+  --primary-hover: #4338ca;
+  --success-hover: #059669;
+  --warning-hover: #d97706;
+  --neutral-hover: #4b5563;
+  --done-hover: #475569;
+  --note-hover: #7c3aed;
 }
 
-.new-muda {
-  border: 2px dashed #D1C7AC;
-  margin-bottom:4px;
-  padding:3px;
+.container {
+    width: 98%;
+    min-width: 600px;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 16px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;  /* Include padding in width calculation */
 }
 
-.muda-container {
-  margin-top:8px;
-  margin-bottom:4px;
-}
-
+/* Menu container */
 .menu-container {
-  height:25px;
-  margin-bottom:8px;
+    height: 36px;
+    margin-bottom: 12px;  /* Reduced from previous */
+    display: flex;
+    align-items: center;
+    gap: 4px;  /* Reduced spacing between buttons */
 }
 
-.text-box {
-  background-repeat:repeat-x;
-  border:1px solid #d1c7ac;
-  color:#333333;
-  padding:3px;
-  margin-right:1px;
-  font-family:tahoma, arial, sans-serif;
-}
-
-.muda-now {
-  background-repeat:repeat-x;
-  border:1px solid #d1c7ac;
-  color:#333333;
-  background-color:#A9F5A9;
-  padding:3px;
-  font-family:tahoma, arial, sans-serif;
-  font-size: 0.8em;
-}
-
-.muda-later {
-  background-repeat:repeat-x;
-  border:1px solid #d1c7ac;
-  color:#333333;
-  background-color:#F2F5A9;
-  padding:3px;
-  font-family:tahoma, arial, sans-serif;
-  font-size: 0.8em;
-}
-
-.muda-done {
-  background-repeat:repeat-x;
-  border:1px solid #d1c7ac;
-  color:#333333;
-  background-color:#BDBDBD;
-  padding:3px;
-  font-family:tahoma, arial, sans-serif;
-  font-size: 0.8em;
-}
-
-.muda-note {
-  background-repeat:repeat-x;
-  border:1px solid #d1c7ac;
-  color:#333333;
-  padding:3px;
-  font-family:tahoma, arial, sans-serif;
-  font-size: 0.8em;
-}
-
+/* Menu buttons */
 .btn {
-  float: left;
-  height: 20px;
-  background: url(images/btn_stretch.png) repeat-x left top;
-  padding: 3px;
-  color: #fff;
-  font-size: 1em;
-  text-decoration: none;
-  text-align: center;
-  font-family:tahoma, arial, sans-serif;
-  text-shadow: 1px 1px 5px #000;
-}
-
-.sbtn {
-  float: left;
-  height: 20px;
-  background: url(images/btn_stretch.png) repeat-x left top;
-  padding: 3px;
-  color:black;
-  font-size: 5em;
-  text-align: center;
-}
-
-.muda-delete {
-  background-color:#8A0808;
-  font-family:entypo;
-  font-size: 1em;
-  width: 1em;
-  text-align: center;
-}
-
-.muda-all-button {
-  background-color:#084B8A;
+    height: 36px;
+    width: 60px;
+    padding: 0;
+    margin: 0;
+    font-size: 14px;
+    line-height: 36px;
+    text-align: center;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text);  /* Changed from white to dark text for better contrast */
+    transition: background-color 0.2s ease;
 }
 
 .muda-pri-button {
-  background-color:#084B8A;
+  background-color: var(--primary);
+  color: white;
 }
 
-.muda-now-button {
-  background-color:#088A08;
-  width: 3em;
+.muda-pri-button:hover { background-color: var(--primary-hover); }
+
+.muda-now-button { 
+    background-color: var(--success); 
+    color: white;
+}
+.muda-now-button:hover { background-color: var(--success-hover); }
+
+.muda-later-button { 
+    background-color: var(--warning); 
+    color: white;
+}
+.muda-later-button:hover { background-color: var(--warning-hover); }
+
+.muda-done-button { 
+    background-color: var(--done); 
+    color: white;
+}
+.muda-done-button:hover { 
+    background-color: var(--done-hover); 
 }
 
-.muda-later-button {
-  background-color:#868A08;
-  width: 3em;
+.muda-note-button { 
+    background-color: var(--note); 
+    color: white;
+}
+.muda-note-button:hover { 
+    background-color: var(--note-hover); 
 }
 
-.muda-done-button {
-  background-color:#2E2E2E;
-  width: 3em;
+/* Input field */
+.new-muda {
+    width: 100%;
+    padding: 8px;
+    margin: 0 0 12px 0;  /* Adjusted margins */
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    box-sizing: border-box;
 }
 
-.muda-note-button {
-  background-color:#A4A4A4;
-  width: 3em;
+.new-muda:focus {
+  outline: none;
+  border-color: var(--primary);
 }
 
-.muda-settings-button {
-  background-repeat:repeat-x;
-  border:1px solid #d1c7ac;
-  padding:2px;
-  font-family:entypo;
-  font-size: 1.4em;
-  background-color:white;
-  width: 2em;
+/* Task container */
+.muda-container {
+    margin: 4px 0;  /* Reduced vertical spacing between tasks */
+    width: 100%;
+    display: flex;
+    align-items: center;
 }
 
-.dirty {
-  color: red;
+/* Task items */
+.text-box, .muda-now, .muda-later, .muda-done, .muda-note {
+    padding: 8px;
+    margin-right: 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    background-color: var(--background);
+    color: var(--text);
+    width: calc(100% - 200px);  /* Adjusted to account for state button, timestamp and delete */
+    height: 36px;
+    line-height: 20px;
+    box-sizing: border-box;
 }
 
+.muda-now { background-color: var(--bg-success); }
+.muda-later { background-color: var(--bg-warning); }
+.muda-done { background-color: var(--bg-neutral); }
+.muda-note { background-color: var(--bg-note); }
+
+/* Delete button */
+.muda-delete {
+    width: 24px;
+    height: 36px;
+    line-height: 36px;
+    padding: 0;
+    margin: 0;
+    font-size: 18px;
+    text-align: center;
+}
+
+.muda-delete:hover {
+  color: var(--danger);
+}
+
+/* Timestamp */
 .timestamp {
-  color: grey;
-  font-size: 0.8em;
-  width: 8em;
+    width: 130px;
+    line-height: 36px;
+    margin: 0 8px;
+    text-align: right;
+    padding: 0;
+    color: var(--neutral);
+    font-size: 12px;
+    font-family: Monaco, Consolas, monospace;
+    background: transparent;
+    border: none;
+    user-select: none;
+    white-space: nowrap;
+    overflow: visible;
 }
 
+/* Settings buttons */
+.sbtn.muda-settings-button {
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+    color: var(--text);
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;  /* Changed from default text cursor to pointer */
+    font-size: 18px;
+    text-align: center;
+    float: left;
+    margin-left: 4px;
+}
+
+.sbtn.muda-settings-button:hover {
+    background-color: var(--bg-neutral);
+}
+
+/* Dirty state */
+.dirty {
+  border-color: var(--danger);
+}
+
+/* Auth widgets */
 .Wt-auth-logged-in {
+  padding: 8px;
   text-align: right;
 }
 
-.Wt-auth-icon {
-  cursor: pointer;
-  cursor: hand;
-  padding-left: 4px;
-  padding-right: 4px;
+.Wt-auth-registration {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 24px;
 }
 
-.Wt-auth-registration {
-  width: 600px;
+/* Login container */
+
+/* For the login form specifically, we want it centered but narrower */
+.login-form-container {
+  max-width: 400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* App title styling */
+.login-header {
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+/* Subtitle styling */
+.login-subtitle {
+    color: var(--neutral);
+    text-align: center;
+    font-size: 14px;
+    margin-bottom: 32px;
+}
+
+/* Form fields */
+.Wt-form {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.Wt-form label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.Wt-form .Wt-info {
+    color: var(--neutral);
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.Wt-form .Wt-fields input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.Wt-form .Wt-fields input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(68, 119, 255, 0.1);
+}
+
+/* Remember me checkbox */
+.Wt-form .Wt-fields input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+    margin-top: 0;
+}
+
+/* Login button */
+.Wt-form .Wt-buttons {
+    margin-top: 24px;
+}
+
+.Wt-form .Wt-buttons button {
+    width: 100%;
+    padding: 12px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.Wt-form .Wt-buttons button:hover {
+    background-color: #3366ee;
+}
+
+/* Links */
+.login-links {
+    text-align: center;
+    margin-top: 16px;
+}
+
+.login-links a {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 14px;
+    margin: 0 8px;
+}
+
+.login-links a:hover {
+    text-decoration: underline;
 }
