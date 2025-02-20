@@ -209,38 +209,6 @@
   text-align: right;
 }
 
-.Wt-auth-registration {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 24px;
-}
-
-/* Login container */
-
-/* For the login form specifically, we want it centered but narrower */
-.login-form-container {
-  max-width: 400px;
-  width: 100%;
-  margin: 0 auto;
-}
-
-/* App title styling */
-.login-header {
-    font-size: 28px;
-    font-weight: bold;
-    color: var(--primary);
-    text-align: center;
-    margin-bottom: 4px;
-}
-
-/* Subtitle styling */
-.login-subtitle {
-    color: var(--neutral);
-    text-align: center;
-    font-size: 14px;
-    margin-bottom: 32px;
-}
-
 /* Form fields */
 .Wt-form {
     width: 100%;
@@ -307,6 +275,58 @@
     background-color: #3366ee;
 }
 
+
+/* Login container */
+
+.login-form-container {
+  max-width: 400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Login button container */
+.login-form-container .Wt-form .Wt-buttons {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+/* Login button */
+.login-form-container .Wt-form .Wt-buttons button {
+    width: 200px;  /* Fixed width for the button */
+    padding: 12px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.login-form-container .Wt-form .Wt-buttons button:hover {
+    background-color: var(--primary-hover);
+}
+
+/* App title styling */
+.login-header {
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+/* Subtitle styling */
+.login-subtitle {
+    color: var(--neutral);
+    text-align: center;
+    font-size: 14px;
+    margin-bottom: 32px;
+}
+
 /* Links */
 .login-links {
     text-align: center;
@@ -322,4 +342,150 @@
 
 .login-links a:hover {
     text-decoration: underline;
+}
+/* Registration form container */
+.Wt-auth-registration {
+    max-width: 400px;
+    width: 100%;
+    margin: 20px auto;
+    padding: 32px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+}
+
+/* Remove default Wt styles and borders */
+.Wt-auth-registration > div,
+.Wt-auth-registration > div > div {
+    border: none !important;
+    background: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box;
+}
+
+/* Registration header */
+.Wt-auth-registration h2 {
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 4px;
+    background: none;
+    padding: 0;
+    border: none;
+}
+
+/* Registration description text */
+.Wt-auth-registration p {
+    color: var(--neutral);
+    text-align: center;
+    font-size: 14px;
+    margin-bottom: 32px;
+    border: none;
+    padding: 0;
+}
+
+/* Labels */
+.Wt-auth-registration .Wt-form label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+    width: 100%;
+    float: none;
+}
+
+/* Helper text */
+.Wt-auth-registration .Wt-form .Wt-info {
+    color: var(--neutral);
+    font-size: 12px;
+    margin: 2px 0 8px 0;
+    width: 100%;
+    text-align: left;
+}
+
+/* Input fields */
+.Wt-auth-registration .Wt-form .Wt-fields input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 20px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    float: none;
+    box-sizing: border-box;
+    background: white;
+}
+
+.Wt-auth-registration .Wt-form .Wt-fields input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* Buttons container */
+.Wt-auth-registration .Wt-form .Wt-buttons {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 12px;
+}
+
+/* Register and Cancel buttons */
+.Wt-auth-registration .Wt-form .Wt-buttons button {
+    width: 120px;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: inline-block;
+    float: none;
+    clear: none;
+}
+
+/* Register button specific styles */
+.Wt-auth-registration .Wt-form .Wt-buttons button:first-child {
+    background: var(--primary);
+    color: white;
+    border: none;
+}
+
+.Wt-auth-registration .Wt-form .Wt-buttons button:first-child:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Cancel button specific styles */
+.Wt-auth-registration .Wt-form .Wt-buttons button:last-child {
+    background-color: white;
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+.Wt-auth-registration .Wt-form .Wt-buttons button:last-child:hover {
+    background-color: var(--bg-neutral);
+}
+
+/* Ensure all elements respect container width */
+.Wt-auth-registration * {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* OAuth section if present */
+.Wt-auth-registration .oauth-section {
+    margin-top: 24px;
+    text-align: center;
+}
+
+.Wt-auth-registration .oauth-section label {
+    text-align: center;
 }
