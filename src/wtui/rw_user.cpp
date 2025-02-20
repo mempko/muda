@@ -90,14 +90,6 @@ namespace mempko::muda::wt
         root()->clear();
         root()->addStyleClass("container");
 
-        // Add login-specific container
-        auto loginContainer = std::make_unique<WContainerWidget>();
-        loginContainer->setStyleClass("login-form-container");
-
-        // Add header and subtitle to login container
-        loginContainer->addWidget(std::make_unique<WText>("<div class='login-header'>Muda</div>"));
-        loginContainer->addWidget(std::make_unique<WText>("<div class='login-subtitle'>Task Management Made Simple</div>"));
-
         auto auth_model = std::make_unique<wo::AuthModel>(session::auth(), _session->users());
         auth_model->addPasswordAuth(&session::password_auth());
         auth_model->addOAuth(session::oauth());
@@ -108,13 +100,20 @@ namespace mempko::muda::wt
         authw->processEnvironment();
 
         if(!authw->login().loggedIn()) {
+            // Add login-specific container
+            auto loginContainer = std::make_unique<WContainerWidget>();
+            loginContainer->setStyleClass("login-form-container");
+
+            // Add header and subtitle to login container
+            loginContainer->addWidget(std::make_unique<WText>("<div class='login-header'>Muda</div>"));
+            loginContainer->addWidget(std::make_unique<WText>("<div class='login-subtitle'>Get Things Done</div>"));
+
             loginContainer->addWidget(std::move(authw));
+            root()->addWidget(std::move(loginContainer));
         } else {
             startup_muda_screen();
         }
 
-        // Add login container to root
-        root()->addWidget(std::move(loginContainer));
     }
     void rw_user::settings_screen()
     {
