@@ -56,16 +56,16 @@ namespace mempko::muda::model
             muda_state state() const { return _state;} 
             void state(muda_state s) { LOCK; _state = s; } 
 
-            void now() { LOCK; _state = NOW;}
-            void later() { LOCK; _state = LATER;}
-            void done() { LOCK; _state = DONE;}
-            void note() { LOCK; _state = NOTE;}
+            void now() { LOCK; _state = muda_state::NOW;}
+            void later() { LOCK; _state = muda_state::LATER;}
+            void done() { LOCK; _state = muda_state::DONE;}
+            void note() { LOCK; _state = muda_state::NOTE;}
 
             time modified() const { return _modified;}
             void modified(const time& t) { LOCK; _modified = t;}
 
         public:
-            muda_state _state = NOW;
+            muda_state _state = muda_state::NOW;
             time _modified;
     };
 }

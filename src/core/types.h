@@ -27,7 +27,7 @@ namespace mempko::muda
 { 
     using text_type = std::string;
     using id_type = long;
-    enum muda_state { NOW, LATER, DONE, NOTE};
+    enum class muda_state { NOW, LATER, DONE, NOTE};
 
     //using date = boost::gregorian::date;
     using time = std::chrono::system_clock::time_point;

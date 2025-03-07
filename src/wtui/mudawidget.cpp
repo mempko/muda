@@ -221,7 +221,7 @@ namespace mempko::muda::wt
 
         switch(_muda->type().state())
         {
-            case NOW: 
+            case muda_state::NOW: 
                 _type->setStyleClass("btn muda-now-button");
                 _date->setStyleClass("timestamp muda-now");
 
@@ -229,7 +229,7 @@ namespace mempko::muda::wt
                 else  _edit->setStyleClass("muda-now");
 
                 break;
-            case LATER: 
+            case muda_state::LATER: 
                 _type->setStyleClass("btn muda-later-button");
                 _date->setStyleClass("timestamp muda-later");
 
@@ -237,7 +237,7 @@ namespace mempko::muda::wt
                 else _edit->setStyleClass("muda-later");
 
                 break;
-            case DONE: 
+            case muda_state::DONE: 
                 _type->setStyleClass("btn muda-done-button");
                 _date->setStyleClass("timestamp muda-done");
 
@@ -245,7 +245,7 @@ namespace mempko::muda::wt
                 else _edit->setStyleClass("muda-done");
 
                 break;
-            case NOTE: 
+            case muda_state::NOTE: 
                 _type->setStyleClass("btn muda-note-button");
                 _date->setStyleClass("timestamp muda-note");
 
@@ -275,16 +275,16 @@ namespace mempko::muda::wt
 
         switch(_muda->type().state())
         {
-            case NOW: 
+            case muda_state::NOW: 
                 _type->setText("now");
                 break;
-            case LATER: 
+            case muda_state::LATER: 
                 _type->setText("later");
                 break;
-            case DONE: 
+            case muda_state::DONE: 
                 _type->setText("done");
                 break;
-            case NOTE: 
+            case muda_state::NOTE: 
                 _type->setText("note");
                 break;
         }

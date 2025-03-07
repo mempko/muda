@@ -104,21 +104,21 @@ namespace mempko::muda::wt
 
         switch(_muda->type().state())
         {
-            case NOW: 
+            case muda_state::NOW: 
                 _text->setStyleClass("muda-now");
                 _date->setStyleClass("timestamp muda-now");
                 break;
-            case LATER: 
+            case muda_state::LATER: 
                 _text->setStyleClass("muda-later");
                 _date->setStyleClass("timestamp muda-later");
 
                 break;
-            case DONE: 
+            case muda_state::DONE: 
                 _text->setStyleClass("muda-done");
                 _date->setStyleClass("timestamp muda-done");
 
                 break;
-            case NOTE: 
+            case muda_state::NOTE: 
                 _text->setStyleClass("muda-note");
                 _date->setStyleClass("timestamp muda-note");
 

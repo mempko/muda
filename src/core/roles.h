@@ -276,10 +276,10 @@ namespace mempko::muda::role
 
                 switch(initial_state)
                 {
-                    case NOW: self()->later(); break;
-                    case LATER: self()->done(); break;
-                    case DONE: self()->note(); break;
-                    case NOTE: self()->now(); break;
+                    case muda_state::NOW: self()->later(); break;
+                    case muda_state::LATER: self()->done(); break;
+                    case muda_state::DONE: self()->note(); break;
+                    case muda_state::NOTE: self()->now(); break;
                     default:
                                CHECK(false && "missed case");
                 }

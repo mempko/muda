@@ -478,25 +478,25 @@ namespace mempko::muda::wt
     bool rw_user::filter_by_now(mm::muda_dptr muda)
     {
         REQUIRE(muda);
-        return muda->type().state() == NOW && filter_by_search(muda);
+        return muda->type().state() == muda_state::NOW && filter_by_search(muda);
     }
 
     bool rw_user::filter_by_later(mm::muda_dptr muda)
     {
         REQUIRE(muda);
-        return muda->type().state() == LATER && filter_by_search(muda);
+        return muda->type().state() == muda_state::LATER && filter_by_search(muda);
     }
 
     bool rw_user::filter_by_done(mm::muda_dptr muda)
     {
         REQUIRE(muda);
-        return muda->type().state() == DONE && filter_by_search(muda);
+        return muda->type().state() == muda_state::DONE && filter_by_search(muda);
     }
 
     bool rw_user::filter_by_note(mm::muda_dptr muda)
     {
         REQUIRE(muda);
-        return muda->type().state() == NOTE && filter_by_search(muda);
+        return muda->type().state() == muda_state::NOTE && filter_by_search(muda);
     }
 
 
@@ -530,7 +530,8 @@ namespace mempko::muda::wt
         mu::filter(v,
                 [&](auto muda) 
                 { 
-                return muda->type().state() != NOTE && this->filter_by_search(muda);
+                    return muda->type().state() != muda_state::NOTE &&
+                        this->filter_by_search(muda);
                 }); 
 
         muda_list_sort(v);
