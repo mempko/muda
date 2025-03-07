@@ -20,7 +20,7 @@
 #ifndef MEMPKO_MUDA_RO_LIST_WIDGET_H
 #define MEMPKO_MUDA_RO_LIST_WIDGET_H
 
-#include <boost/function.hpp>
+#include <functional>
 
 #include <Wt/WCompositeWidget.h>
 #include <Wt/WContainerWidget.h>
@@ -36,7 +36,7 @@ namespace mempko::muda::wt {
 
     class ro_muda_list_widget : public Wt::WCompositeWidget {
         public:
-            using mutate_func = boost::function<void (muda_vec&)>;
+            using mutate_func = std::function<void (muda_vec&)>;
             ro_muda_list_widget(
                     dbo::Session& s,
                     model::muda_list_dptr mudas, 
