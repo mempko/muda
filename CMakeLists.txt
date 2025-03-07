@@ -17,8 +17,8 @@
 cmake_minimum_required(VERSION 2.6)
 project(muda)
 
-#use C++11
-ADD_DEFINITIONS(-std=c++17)
+#use C++20
+ADD_DEFINITIONS(-std=c++20)
 
 #setup boost
 set(Boost_USE_STATIC_LIBS on)
