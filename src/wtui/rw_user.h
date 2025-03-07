@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -22,6 +22,7 @@
 #include <fstream>
 #include <functional>
 #include <memory>
+#include <optional>
 
 #include <Wt/WApplication.h>
 #include <Wt/WBreak.h>
@@ -36,20 +37,18 @@
 #include <Wt/WServer.h>
 #include <Wt/WEnvironment.h>
 
-#include <boost/optional.hpp>
 #include <boost/regex.hpp>
 
 #include "core/muda.h"
-#include "core/context.h"
 #include "wtui/mudalistwidget.h"
 #include "wtui/session.h"
 
-namespace mempko::muda::wt
-{ 
-    using optional_regex = boost::optional<boost::regex>;
 
-    class rw_user : public Wt::WApplication
-    {
+
+namespace mempko::muda::wt { 
+    using optional_regex = std::optional<boost::regex>;
+
+    class rw_user : public Wt::WApplication {
         public:
             rw_user(const Wt::WEnvironment& env);
         private:

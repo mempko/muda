@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -26,22 +26,18 @@
 #include <chrono>
 #include <ctime>
 
-namespace mempko::muda::wt 
-{ 
-    using boost::bind;
-    using boost::mem_fn;
+namespace mempko::muda::wt { 
     namespace w = Wt;
 
-    namespace
-    {
-        std::string timestamp(time pt)
-        {
-            auto x = pt.time_since_epoch()* std::chrono::system_clock::period::num / std::chrono::system_clock::period::den;
-            auto t = time_t(x.count());
+    namespace {
+        std::string timestamp(time pt) {
+            const auto x = pt.time_since_epoch() * std::chrono::system_clock::period::num / std::chrono::system_clock::period::den;
+            const auto t = time_t(x.count());
 
             char str[20];
-            if(std::strftime(str, sizeof(str), "%b %d %I:%M:%S", std::localtime(&t))) 
-                return std::string(str);
+            if(std::strftime(str, sizeof(str), "%b %d %I:%M:%S", std::localtime(&t))) { 
+                return str;
+            }
 
             return "";
         }
@@ -51,8 +47,7 @@ namespace mempko::muda::wt
             dbo::Session& s,
             model::muda_dptr muda) :
         w::WContainerWidget{},
-        _muda{muda}, _session{s}
-    {
+        _muda{muda}, _session{s} {
         REQUIRE(muda);
 
         create_ui();
@@ -62,8 +57,7 @@ namespace mempko::muda::wt
 
     ro_muda_widget::~ro_muda_widget() {}
 
-    void ro_muda_widget::create_ui()
-    {
+    void ro_muda_widget::create_ui() {
         INVARIANT(_muda);
 
         //create text label
@@ -97,13 +91,11 @@ namespace mempko::muda::wt
         ENSURE(_date);
     }
 
-    void ro_muda_widget::set_style()
-    {
+    void ro_muda_widget::set_style() {
         INVARIANT(_muda);
         INVARIANT(_date);
 
-        switch(_muda->type().state())
-        {
+        switch(_muda->type().state()) {
             case muda_state::NOW: 
                 _text->setStyleClass("muda-now");
                 _date->setStyleClass("timestamp muda-now");
@@ -126,8 +118,7 @@ namespace mempko::muda::wt
         }
     }
 
-    void ro_muda_widget::set_date()
-    {
+    void ro_muda_widget::set_date() {
         INVARIANT(_date);
         INVARIANT(_muda);
 

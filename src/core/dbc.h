@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -23,69 +23,60 @@
 #include <iostream>
 #include <sstream>
 
-namespace mempko
+namespace mempko::muda::util
 {
-    namespace muda 
-    {
-        namespace util 
-        {
-            void raise(const char * msg);
-            void raise1( 
-                    const char * file, 
-                    const char * func, 
-                    const int, 
-                    const char * dbc, 
-                    const char * expr);
+    void raise(const char * msg);
+    void raise1( 
+            const char * file, 
+            const char * func, 
+            const int, 
+            const char * dbc, 
+            const char * expr);
 
-            template <typename T1, typename T2>
-                void raise2(
-                        const char * file, 
-                        const char * func, 
-                        const int line, 
-                        const char * dbc, 
-                        const char * expr, 
-                        const char* n1, const T1& v1,
-                        const char* n2, const T2& v2)
-                {
-                    std::stringstream s;
-                    s << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                    s << "!! " << dbc << " failed" << std::endl;
-                    s << "!! expr: " << expr 
-                        << " [" << n1 << " = " << v1 
-                        << ", " << n2 << " = " << v2 << "]" << std::endl;
-                    s << "!! func: " << func << std::endl;
-                    s << "!! file: " << file << " (" << line << ")" << std::endl;
-                    s << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                    raise(s.str().c_str());
-                }
-
-            template <typename T1, typename T2, typename T3>
-                void raise3(
-                        const char * file, 
-                        const char * func, 
-                        const int line, 
-                        const char * dbc, 
-                        const char * expr, 
-                        const char* n1, const T1& v1,
-                        const char* n2, const T2& v2,
-                        const char* n3, const T3& v3)
-                {
-                    std::stringstream s;
-                    s << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                    s << "!! " << dbc << " failed" << std::endl;
-                    s << "!! expr: " << expr 
-                        << " [" << n1 << " = " << v1 
-                        << ", " << n2 << " = " << v2 
-                        << ", " << n3 << " = " << v3 << "]" << std::endl;
-                    s << "!! func: " << func << std::endl;
-                    s << "!! file: " << file << " (" << line << ")" << std::endl;
-                    s << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                    raise(s.str().c_str());
-                }
+    template <typename T1, typename T2>
+        void raise2(
+                const char * file, 
+                const char * func, 
+                const int line, 
+                const char * dbc, 
+                const char * expr, 
+                const char* n1, const T1& v1,
+                const char* n2, const T2& v2) {
+            std::stringstream s;
+            s << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+            s << "!! " << dbc << " failed" << std::endl;
+            s << "!! expr: " << expr 
+                << " [" << n1 << " = " << v1 
+                << ", " << n2 << " = " << v2 << "]" << std::endl;
+            s << "!! func: " << func << std::endl;
+            s << "!! file: " << file << " (" << line << ")" << std::endl;
+            s << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+            raise(s.str().c_str());
         }
-    }
-}
 
+    template <typename T1, typename T2, typename T3>
+        void raise3(
+                const char * file, 
+                const char * func, 
+                const int line, 
+                const char * dbc, 
+                const char * expr, 
+                const char* n1, const T1& v1,
+                const char* n2, const T2& v2,
+                const char* n3, const T3& v3) {
+            std::stringstream s;
+            s << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+            s << "!! " << dbc << " failed" << std::endl;
+            s << "!! expr: " << expr 
+                << " [" << n1 << " = " << v1 
+                << ", " << n2 << " = " << v2 
+                << ", " << n3 << " = " << v3 << "]" << std::endl;
+            s << "!! func: " << func << std::endl;
+            s << "!! file: " << file << " (" << line << ")" << std::endl;
+            s << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+            raise(s.str().c_str());
+        }
+}
 
 #define F_STR(E) #E
 #define F_R1(dbc, exp) if(!(exp)) { mempko::muda::util::raise1( __FILE__, __FUNCTION__, __LINE__, dbc, F_STR(exp)); } 

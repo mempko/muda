@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -25,16 +25,11 @@
 #include <chrono>
 #include <ctime>
 
-namespace mempko::muda::wt 
-{ 
-    using boost::bind;
-    using boost::mem_fn;
+namespace mempko::muda::wt { 
     namespace w = Wt;
 
-    namespace
-    {
-        std::string timestamp(time pt)
-        {
+    namespace {
+        std::string timestamp(time pt) {
             auto x = pt.time_since_epoch()* std::chrono::system_clock::period::num / std::chrono::system_clock::period::den;
             auto t = time_t(x.count());
 
@@ -50,8 +45,7 @@ namespace mempko::muda::wt
             dbo::Session& s,
             model::muda_dptr muda) :
         w::WContainerWidget{},
-        _muda{muda}, _session{s}
-    {
+        _muda{muda}, _session{s} {
         REQUIRE(muda);
 
         create_ui();
@@ -59,14 +53,12 @@ namespace mempko::muda::wt
         ENSURE(_muda);
     }
 
-    muda_widget::~muda_widget()
-    {
+    muda_widget::~muda_widget() {
         _when_text_changes.disconnect();
         _when_type_changes.disconnect();
     }
 
-    void muda_widget::create_ui()
-    {
+    void muda_widget::create_ui() {
         INVARIANT(_muda);
 
         //create text editor
@@ -82,9 +74,13 @@ namespace mempko::muda::wt
 
         //when the model changes the text or type
         _when_text_changes = _muda.modify()->when_text_changes(
-                bind(&muda_widget::update_text, this));
+                [this]() {
+                    update_text();
+                });
         _when_type_changes = _muda.modify()->type().when_type_changes(
-                bind(&muda_widget::update_type, this));
+                [this]() {
+                    update_type();
+                });
 
         //type button
         auto type = std::make_unique<w::WLabel>("now");
@@ -132,9 +128,11 @@ namespace mempko::muda::wt
     {
         INVARIANT(_muda);
         INVARIANT(_edit);
-        if(_dirty) return;
-        if(_enter) 
-        {
+        if(_dirty) {
+            return;
+        }
+
+        if(_enter) {
             _enter = false;
             return;
         }
@@ -143,13 +141,11 @@ namespace mempko::muda::wt
         set_style();
     }
 
-    void muda_widget::change_text()
-    {
+    void muda_widget::change_text() {
         INVARIANT(_muda);
         INVARIANT(_edit);
 
-        if(_dirty)
-        {
+        if(_dirty) {
             _dirty = false;
             set_style();
         }
@@ -157,54 +153,51 @@ namespace mempko::muda::wt
 
         dbo::Transaction t{_session};
 
-        auto modify_text = context::modify_muda_text{*(_muda.modify()), _edit->text().toUTF8()};
+        auto modify_text = context::modify_muda_text{
+            *(_muda.modify()),
+            _edit->text().toUTF8()
+        };
+
         modify_text();
 
     }
 
-    void muda_widget::update_text()
-    {
+    void muda_widget::update_text() {
         INVARIANT(_muda);
 
         _edit->setText(_muda->text());
         update_date();
     }
 
-    void muda_widget::show_buttons()
-    {
+    void muda_widget::show_buttons() {
         _date->show();
         _delete_button->show();
         _type->show();
     }
 
-    void muda_widget::hide_buttons()
-    {
+    void muda_widget::hide_buttons() {
         _date->hide();
         _delete_button->hide();
         _type->hide();
 
     }
 
-    void muda_widget::delete_pressed()
-    {
+    void muda_widget::delete_pressed() {
         INVARIANT(_muda);
 
         hide_buttons();
         _delete_sig(_muda->id(), this);
     }
 
-    boost::signals2::connection muda_widget::when_delete_pressed(const delete_slot& slot) 
-    { 
+    boost::signals2::connection muda_widget::when_delete_pressed(const delete_slot& slot) { 
         return _delete_sig.connect(slot);
     }
 
-    boost::signals2::connection muda_widget::when_type_pressed(const type_slot& slot) 
-    { 
+    boost::signals2::connection muda_widget::when_type_pressed(const type_slot& slot) { 
         return _type_sig.connect(slot);
     }
 
-    void muda_widget::type_pressed()
-    {
+    void muda_widget::type_pressed() {
         INVARIANT(_muda);
         dbo::Transaction t{_session};
 
@@ -213,14 +206,12 @@ namespace mempko::muda::wt
         _type_sig();
     }
 
-    void muda_widget::set_style()
-    {
+    void muda_widget::set_style() {
         INVARIANT(_muda);
         INVARIANT(_type);
         INVARIANT(_date);
 
-        switch(_muda->type().state())
-        {
+        switch(_muda->type().state()) {
             case muda_state::NOW: 
                 _type->setStyleClass("btn muda-now-button");
                 _date->setStyleClass("timestamp muda-now");
@@ -255,8 +246,7 @@ namespace mempko::muda::wt
         }
     }
 
-    void muda_widget::update_date()
-    {
+    void muda_widget::update_date() {
         INVARIANT(_date);
         INVARIANT(_muda);
 
@@ -268,13 +258,11 @@ namespace mempko::muda::wt
         _date->setText(timestamp(date));
     }
 
-    void muda_widget::update_type()
-    {
+    void muda_widget::update_type() {
         INVARIANT(_muda);
         INVARIANT(_type);
 
-        switch(_muda->type().state())
-        {
+        switch(_muda->type().state()) {
             case muda_state::NOW: 
                 _type->setText("now");
                 break;

@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -29,16 +29,14 @@
 namespace mempko::muda::context
 { 
     template <class m>
-        class modify_text_context 
-        {
+        class modify_text_context {
             public:
                 modify_text_context(
                         role::modifiable_object<m, text_type>& md, 
                         const text_type& text) : 
                     _m{md}, _text{text} {}
 
-                void operator()()
-                {
+                void operator()() {
                     _m.change(_text);
                 }
 
@@ -48,16 +46,14 @@ namespace mempko::muda::context
         };
 
     template <class m, class list_type>
-        class set_incremental_id
-        {
+        class set_incremental_id {
             public:
                 set_incremental_id(
                         role::id_reciever<m>& md, 
                         const role::iterable<list_type>& list) :
                     _m{md}, _list{list} {}
 
-                void operator()()
-                {
+                void operator()() {
                     //find max
                     using list_value = typename list_type::value_type;
                     auto cp = std::vector<list_value>{std::begin(_list), std::end(_list)};
@@ -82,18 +78,15 @@ namespace mempko::muda::context
         };
 
     template <class m, class m_ptr, class list>
-        class add_object
-        {
+        class add_object {
             public:
                 add_object(m_ptr mp, list& l) : 
-                    _m{mp}, _list{l} 
-                {
+                    _m{mp}, _list{l} {
                     REQUIRE(mp);
                     ENSURE(_m);
                 }
 
-                void operator()()
-                {
+                void operator()() {
                     using list_type = typename list::list_type;
 
                     auto mm = _m.modify();
@@ -110,15 +103,13 @@ namespace mempko::muda::context
         };
 
     template<class container, class id>
-        class remove_object
-        {
+        class remove_object {
             public:
                 remove_object(
                         id v, 
                         role::removable<id>& removable) :
                     _id(v), _removable(removable) {}
-                void operator()()
-                {
+                void operator()() {
                     const bool removed = _removable.remove(_id);
                     ENSURE(removed);
                 }
@@ -127,12 +118,10 @@ namespace mempko::muda::context
                 role::removable<id>& _removable;
         };
 
-    class transition_state
-    {
+    class transition_state {
         public:
             transition_state(role::transitional_object& obj) : _obj(obj) {}
-            void operator()()
-            {
+            void operator()() {
                 _obj.transition();
             }
 

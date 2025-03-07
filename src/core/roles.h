@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -22,36 +22,31 @@
 
 #include <boost/assert.hpp>
 #include <boost/signals2.hpp>
-#include <boost/thread/thread.hpp>
-#include <boost/thread/mutex.hpp>
 #include <chrono>
+#include <mutex>
 
 #include "core/types.h"
 #include "core/dci.h"
 #include "core/dbc.h"
 
-namespace mempko::muda::role 
-{ 
-#define LOCK boost::mutex::scoped_lock l{self()->mutex()}
+namespace mempko::muda::role { 
+#define LOCK std::scoped_lock l{self()->mutex()}
 
-    class lockable
-    {
+    class lockable {
         public:
-            boost::mutex& mutex() { return _m;}
+            std::mutex& mutex() { return _m;}
         private:
-            boost::mutex _m;
+            std::mutex _m;
     };
 
     template< class tag>
-        class signaler0
-        {
+        class signaler0 {
             public:
                 using sig = boost::signals2::signal<void ()>;				
                 using connection = boost::signals2::connection;
                 using slot_type = typename sig::slot_type;
 
-                auto when_signaled(const slot_type& slot)
-                { 
+                auto when_signaled(const slot_type& slot) { 
                     return _sig.connect(slot);
                 }
 
@@ -63,15 +58,13 @@ namespace mempko::muda::role
         };
 
     template< class tag, class obj>
-        class signaler1
-        {
+        class signaler1 {
             public:
                 using sig = boost::signals2::signal<void (obj)>;				
                 using connection = boost::signals2::connection;
                 using slot_type = typename sig::slot_type;
 
-                auto when_signaled(const slot_type& slot) 
-                { 
+                auto when_signaled(const slot_type& slot) { 
                     return _sig.connect(slot);
                 }
 
@@ -83,8 +76,7 @@ namespace mempko::muda::role
         };
 
     template<class m, class value>
-        class modifiable_object 
-        {
+        class modifiable_object {
             public:
                 virtual void change(const value&) = 0;
                 virtual ~modifiable_object(){}
@@ -100,8 +92,7 @@ namespace mempko::muda::role
     {
         ADD_SELF(m)
         public:
-            virtual void change(const text_type& text) 
-            {
+            virtual void change(const text_type& text) {
                 self()->text(text);
                 self()->stamp_modified();
                 signal();
@@ -110,15 +101,13 @@ namespace mempko::muda::role
             }
 
         public:
-            auto when_text_changes(const slot_type& slot) 
-            { 
+            auto when_text_changes(const slot_type& slot) { 
                 return when_signaled(slot);
             }
     };
 
     template<class m>
-        class id_reciever
-        {
+        class id_reciever {
             public:
                 virtual void recieve(id_type id) = 0;
                 virtual ~id_reciever(){}
@@ -129,16 +118,14 @@ namespace mempko::muda::role
     {
         ADD_SELF(m)
         public:
-            virtual void recieve(id_type id)
-            {
+            virtual void recieve(id_type id) {
                 self()->id(id);
                 ENSURE_EQUAL(self()->id(), id);
             }
     };
 
     template<class list>
-        class iterable
-        {
+        class iterable {
             public:
                 using iterator = typename list::iterator;
                 using const_iterator = typename list::const_iterator;
@@ -151,8 +138,7 @@ namespace mempko::muda::role
         };
 
     template<class list, class list_type>
-        class iterable_with_list : public iterable<list_type>
-    {
+        class iterable_with_list : public iterable<list_type> {
         ADD_SELF(list)
         public:
             using iterator = typename list_type::iterator;
@@ -165,8 +151,7 @@ namespace mempko::muda::role
     };
 
     template<class object>
-        class appendable
-        {
+        class appendable {
             public:
                 virtual bool add(object& obj) = 0;
                 virtual ~appendable(){}
@@ -177,12 +162,10 @@ namespace mempko::muda::role
         template<class container, class object>
         class appendable_container : 
             public appendable<object>,
-            public signaler0<when_appended>
-    {
+            public signaler0<when_appended> {
         ADD_SELF(container)
         public:
-            virtual bool add(object& obj) 
-            {
+            virtual bool add(object& obj) {
                 LOCK;
                 self()->list().insert(obj);
                 this->signal();
@@ -190,28 +173,24 @@ namespace mempko::muda::role
             }
 
         public:
-            auto when_object_added(const slot_type& slot) 
-            { 
+            auto when_object_added(const slot_type& slot) { 
                 return when_signaled(slot);
             }
     };
 
     template<class handle>
-        class removable
-        {
+        class removable {
             public:
                 virtual bool remove(handle m) = 0;
                 virtual ~removable(){}
         };
 
     template<class object_ptr, class id>
-        struct id_is
-        {
+        struct id_is {
             public:
                 id_is(id v, object_ptr& removed_obj) : 
                     _v(v), _removed_obj(removed_obj) {}
-                bool operator()(object_ptr obj) 
-                { 
+                bool operator()(object_ptr obj) { 
                     bool remove = obj->id() == _v; 
                     if(remove) _removed_obj = obj;
                     return remove;
@@ -226,12 +205,10 @@ namespace mempko::muda::role
         template<class container, class object_ptr, class id>
         class removable_container : 
             public removable<id>,
-            public signaler1<when_removed, object_ptr>
-    {
+            public signaler1<when_removed, object_ptr> {
         ADD_SELF(container)
         public:
-            virtual bool remove(id v)
-            {
+            virtual bool remove(id v) {
                 LOCK;
 
                 object_ptr removed_obj;
@@ -247,14 +224,12 @@ namespace mempko::muda::role
             using connection = typename signaler1<when_removed, object_ptr>::connection;
             using slot_type = typename signaler1<when_removed, object_ptr>::slot_type;
 
-            auto when_object_removed(const slot_type& slot) 
-            { 
+            auto when_object_removed(const slot_type& slot) { 
                 return when_signaled(slot);
             }
     };
 
-    class transitional_object
-    {
+    class transitional_object {
         public:
             virtual void transition() = 0;
             virtual ~transitional_object(){}
@@ -265,17 +240,13 @@ namespace mempko::muda::role
         template<class type>
         class transitional_state : 
             public transitional_object,
-            public signaler0<when_state_changes>
-
-    {
+            public signaler0<when_state_changes> {
         ADD_SELF(type)
         public:
-            virtual void transition()
-            {
+            virtual void transition() {
                 auto initial_state = self()->state();
 
-                switch(initial_state)
-                {
+                switch(initial_state) {
                     case muda_state::NOW: self()->later(); break;
                     case muda_state::LATER: self()->done(); break;
                     case muda_state::DONE: self()->note(); break;
@@ -290,26 +261,22 @@ namespace mempko::muda::role
             }
 
         public:
-            auto when_type_changes(const slot_type& slot) 
-            { 
+            auto when_type_changes(const slot_type& slot) { 
                 return when_signaled(slot);
             }
     };
 
     template<class type>
-        class time_stampable_when_created
-        {
+        class time_stampable_when_created {
             public:
                 virtual void stamp() = 0;
         };
 
     template <class type>
-        class ptime_stampable_when_created : public time_stampable_when_created<type>
-    {
+        class ptime_stampable_when_created : public time_stampable_when_created<type> {
         ADD_SELF(type)
         public:
-            virtual void stamp()
-            {
+            virtual void stamp() {
                 auto now = std::chrono::system_clock::now();
                 self()->modified(now);
                 self()->created(now);
@@ -317,8 +284,7 @@ namespace mempko::muda::role
     };
 
     template<class type>
-        class time_stampable_when_modified
-        {
+        class time_stampable_when_modified {
             public:
                 virtual void stamp_modified() = 0;
         };
@@ -328,8 +294,7 @@ namespace mempko::muda::role
     {
         ADD_SELF(type)
         public:
-            virtual void stamp_modified()
-            {
+            virtual void stamp_modified() {
                 auto now = std::chrono::system_clock::now();
                 self()->modified(now);
             }

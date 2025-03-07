@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -32,15 +32,13 @@
 
 #include "wtui/mudawidget.h"
 
-namespace mempko::muda::wt 
-{ 
-    typedef std::list<boost::signals2::connection> connections;
+namespace mempko::muda::wt { 
+    using connections = std::list<boost::signals2::connection>;
     using muda_vec = std::vector<model::muda_dptr>;
 
-    class muda_list_widget : public Wt::WCompositeWidget
-    {
+    class muda_list_widget : public Wt::WCompositeWidget {
         public:
-            typedef boost::function<void (muda_vec&)> mutate_func;
+            using mutate_func = boost::function<void (muda_vec&)>;
             muda_list_widget(
                     dbo::Session& s,
                     model::muda_list_dptr mudas, 
@@ -48,12 +46,11 @@ namespace mempko::muda::wt
             ~muda_list_widget();
 
         public:
-            typedef boost::signals2::connection connection;
-            typedef boost::signals2::signal<void ()> update_sig;
-            typedef update_sig::slot_type update_slot;
+            using connection = boost::signals2::connection;
+            using update_sig = boost::signals2::signal<void ()>;
+            using update_slot = update_sig::slot_type;
 
-            auto when_model_updated(const update_slot& slot)
-            {
+            auto when_model_updated(const update_slot& slot) {
                 return _update_sig.connect(slot);
             }
 

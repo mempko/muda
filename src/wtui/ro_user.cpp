@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -26,20 +26,16 @@ namespace ph = std::placeholders;
 namespace mm = mempko::muda::model;
 namespace mu = mempko::muda::util;
 
-namespace mempko::muda::wt
-{ 
+namespace mempko::muda::wt { 
     const std::string RO_APP_PATH = "/u";
 
-    namespace
-    {
-        void muda_list_sort(muda_vec& v)
-        {
+    namespace {
+        void muda_list_sort(muda_vec& v) {
             std::sort(std::begin(v), std::end(v), 
                     [](const auto& a, const auto& b) { return a->id() < b->id();});
         }
 
-        std::unique_ptr<WLabel> create_small_label(WString text, WString css_class)
-        {
+        std::unique_ptr<WLabel> create_small_label(WString text, WString css_class) {
             auto l = std::make_unique<WLabel>(text);
             l->setStyleClass(css_class);
 
@@ -47,8 +43,7 @@ namespace mempko::muda::wt
             return l;
         }
 
-        std::unique_ptr<WLabel> create_menu_label(WString text, WString css_class)
-        {
+        std::unique_ptr<WLabel> create_menu_label(WString text, WString css_class) {
             auto l = std::make_unique<WLabel>(text);
             l->setStyleClass(css_class);
             l->resize(WLength(100, WLength::Unit::Percentage), WLength::Auto);
@@ -59,13 +54,12 @@ namespace mempko::muda::wt
 
     }
 
-    ro_user::ro_user(const WEnvironment& env) : WApplication{env}
-    {
+    ro_user::ro_user(const WEnvironment& env) : WApplication{env} {
         std::string db;
 
-        if(!env.server()->readConfigurationProperty("db", db))
+        if(!env.server()->readConfigurationProperty("db", db)) {
             throw std::invalid_argument("db configuration is missing");
-
+        }
 
         _session = std::make_shared<wt::session>(db);
         _session->login().changed().connect(this, &ro_user::oauth_event);
@@ -77,30 +71,29 @@ namespace mempko::muda::wt
         ENSURE(_session);
     }
 
-    void ro_user::handle_path()
-    {
+    void ro_user::handle_path() {
         set_view();
     }
 
-    void ro_user::set_view()
-    {
+    void ro_user::set_view() {
         INVARIANT(_session);
 
         load_user();
 
-        if(_user) startup_muda_screen();
-        else setInternalPath("../");
+        if(_user) {
+            startup_muda_screen();
+        } else {
+            setInternalPath("../");
+        }
     }
 
-    void ro_user::oauth_event()
-    {
+    void ro_user::oauth_event() {
         INVARIANT(_session);
 
         set_view();
     }
 
-    void ro_user::startup_muda_screen()
-    {
+    void ro_user::startup_muda_screen() {
         INVARIANT(root());
         INVARIANT(_session);
         INVARIANT(_user);
@@ -113,11 +106,12 @@ namespace mempko::muda::wt
         triage_view();
     }
 
-    void ro_user::setup_view()
-    {
+    void ro_user::setup_view() {
         INVARIANT(root());
 
-        if(_search_box) do_search();
+        if(_search_box) {
+            do_search();
+        }
 
         root()->clear();
         create_header_ui();
@@ -125,8 +119,7 @@ namespace mempko::muda::wt
         _search = _set_search;
     }
 
-    void ro_user::triage_view()
-    {
+    void ro_user::triage_view() {
         INVARIANT(root());
         INVARIANT(_session);
 
@@ -136,33 +129,19 @@ namespace mempko::muda::wt
         auto triage = std::make_unique<ro_muda_list_widget>(
                 _session->dbs(),
                 _mudas, 
-                std::bind(&ro_user::make_prioritize_view, this, ph::_1));
+                [this](muda_vec& mudas) {
+                    make_prioritize_view(mudas);
+                });
+
         root()->addWidget(std::move(triage));
 
-        _search_box->enterPressed().connect(std::bind(&ro_user::triage_view, this));
+        _search_box->enterPressed().connect(
+                [this]() {
+                    triage_view();
+                });
     }
 
-    void ro_user::now_view()
-    {
-        INVARIANT(root());
-        INVARIANT(_session);
-
-        setup_view();
-
-
-        //create muda list widget
-        auto list_widget = std::make_unique<ro_muda_list_widget>(
-                _session->dbs(),
-                _mudas, 
-                std::bind(&ro_user::make_now_view, this, ph::_1));
-
-        root()->addWidget(std::move(list_widget));
-
-        _search_box->enterPressed().connect(std::bind(&ro_user::now_view, this));
-    }
-
-    void ro_user::later_view()
-    {
+    void ro_user::now_view() {
         INVARIANT(root());
         INVARIANT(_session);
 
@@ -172,15 +151,19 @@ namespace mempko::muda::wt
         auto list_widget = std::make_unique<ro_muda_list_widget>(
                 _session->dbs(),
                 _mudas, 
-                std::bind(&ro_user::make_later_view, this, ph::_1));
+                [this](muda_vec& mudas) {
+                    make_now_view(mudas);
+                });
 
         root()->addWidget(std::move(list_widget));
 
-        _search_box->enterPressed().connect(std::bind(&ro_user::later_view, this));
+        _search_box->enterPressed().connect(
+                [this]() {
+                    now_view();
+                });
     }
 
-    void ro_user::done_view()
-    {
+    void ro_user::later_view() {
         INVARIANT(root());
         INVARIANT(_session);
 
@@ -190,15 +173,20 @@ namespace mempko::muda::wt
         auto list_widget = std::make_unique<ro_muda_list_widget>(
                 _session->dbs(),
                 _mudas, 
-                std::bind(&ro_user::make_done_view, this, ph::_1));
+                [this](muda_vec& mudas) {
+                    make_later_view(mudas);
+                });
 
         root()->addWidget(std::move(list_widget));
 
-        _search_box->enterPressed().connect(std::bind(&ro_user::done_view, this));
+        _search_box->enterPressed().connect(
+                [this]() {
+                    later_view();
+                });
     }
 
-    void ro_user::note_view()
-    {
+    void ro_user::done_view() {
+        INVARIANT(root());
         INVARIANT(_session);
 
         setup_view();
@@ -207,15 +195,40 @@ namespace mempko::muda::wt
         auto list_widget = std::make_unique<ro_muda_list_widget>(
                 _session->dbs(),
                 _mudas, 
-                std::bind(&ro_user::make_note_view, this, ph::_1));
+                [this](muda_vec& mudas) {
+                    make_done_view(mudas);
+                });
 
         root()->addWidget(std::move(list_widget));
 
-        _search_box->enterPressed().connect(std::bind(&ro_user::note_view, this));
+        _search_box->enterPressed().connect(
+                [this]() {
+                    done_view();
+                });
     }
 
-    void ro_user::load_user()
-    {
+    void ro_user::note_view() {
+        INVARIANT(_session);
+
+        setup_view();
+
+        //create muda list widget
+        auto list_widget = std::make_unique<ro_muda_list_widget>(
+                _session->dbs(),
+                _mudas, 
+                [this](muda_vec& mudas) {
+                    make_note_view(mudas);
+                });
+
+        root()->addWidget(std::move(list_widget));
+
+        _search_box->enterPressed().connect(
+                [this]() {
+                    note_view();
+                });
+    }
+
+    void ro_user::load_user() {
         INVARIANT(_session);
 
         _user.reset();
@@ -227,7 +240,9 @@ namespace mempko::muda::wt
         Wt::log("info") << "RO USER: " << _user_name; 
 
         _user = _session->ro_user(_user_name);
-        if(!_user) return;
+        if(!_user) {
+            return;
+        }
 
         Wt::log("info") << "FOUND USER: " << _user_name;
 
@@ -238,45 +253,43 @@ namespace mempko::muda::wt
         CHECK(_mudas);
 
         //if list isn't public, reset
-        if(!_mudas->is_public()) 
-        {
+        if(!_mudas->is_public()) {
             _user.reset();
             _mudas.reset();
         }
     }
 
-    std::unique_ptr<WContainerWidget> ro_user::create_menu()
-    {
+    std::unique_ptr<WContainerWidget> ro_user::create_menu() {
         //setup menu
         auto triage = create_menu_label("prioritize", "btn muda-pri-button");
-        triage->clicked().connect (std::bind(&ro_user::triage_view, this));
+        triage->clicked().connect ([this]() { triage_view(); });
 
         auto now = create_menu_label("now", "btn muda-now-button");
-        now->clicked().connect (std::bind(&ro_user::now_view, this));
+        now->clicked().connect ([this]() { now_view(); });
 
         auto later = create_menu_label("later", "btn muda-later-button");
-        later->clicked().connect (std::bind(&ro_user::later_view, this));
+        later->clicked().connect ([this]() { later_view(); });
 
         auto done = create_menu_label("done", "btn muda-done-button");
-        done->clicked().connect (std::bind(&ro_user::done_view, this));
+        done->clicked().connect ([this]() { done_view(); });
 
         auto note = create_menu_label("note", "btn muda-note-button");
-        note->clicked().connect (std::bind(&ro_user::note_view, this));
+        note->clicked().connect ([this]() { note_view(); });
 
-        std::vector<std::unique_ptr<WLabel>*> menu = {
+        std::vector<std::unique_ptr<WLabel>*> menu {
             &triage,
             &now,
             &later,
             &done,
-            &note};
+            &note
+        };
 
         auto tabs = std::make_unique<WContainerWidget>();
         auto layout = std::make_unique<WHBoxLayout>();
 
         layout->setSpacing(0);
 
-        for(auto m : menu)
-        {
+        for(auto m : menu) {
             auto mp = m->get();
             layout->addWidget(std::move(*m));
             layout->setStretchFactor(mp, 1);
@@ -292,8 +305,7 @@ namespace mempko::muda::wt
         return tabs;
     }
 
-    void ro_user::create_header_ui()
-    {
+    void ro_user::create_header_ui() {
         INVARIANT(root());
 
         auto menu = create_menu();
@@ -317,9 +329,7 @@ namespace mempko::muda::wt
         ENSURE(_search_box)
     }
 
-    void ro_user::set_search()
-    try
-    {
+    void ro_user::set_search() try {
         INVARIANT(_search_box);
         INVARIANT_GREATER(_search_box->text().value().size(), 0);
 
@@ -328,87 +338,73 @@ namespace mempko::muda::wt
         std::string regex = anyChar + search + anyChar;
 
         boost::regex e{regex};
-        _set_search = boost::make_optional(e);
-    }
-    catch(std::exception& e)
-    {
+        _set_search = e;
+    } catch(std::exception& e) {
         Wt::log("error") << "regex error" << e.what();
     }
 
-    void ro_user::clear_search()
-    {
+    void ro_user::clear_search() {
         _search.reset();
         _set_search.reset();
     }
 
-    bool ro_user::filter_by_search(mm::muda_dptr muda)
-        try
-        {
-            REQUIRE(muda);
+    bool ro_user::filter_by_search(mm::muda_dptr muda) try {
+        REQUIRE(muda);
 
-            if(!_search) return true;
-            return boost::regex_match(muda->text(), _search.get());
+        if(!_search) {
+            return true;
         }
-    catch(...)
-    {
+        return boost::regex_match(muda->text(), _search.value());
+    } catch(...) {
         return false;
     }
 
-    bool ro_user::filter_by_now(mm::muda_dptr muda)
-    {
+    bool ro_user::filter_by_now(mm::muda_dptr muda) {
         REQUIRE(muda);
         return muda->type().state() == muda_state::NOW && filter_by_search(muda);
     }
 
-    bool ro_user::filter_by_later(mm::muda_dptr muda)
-    {
+    bool ro_user::filter_by_later(mm::muda_dptr muda) {
         REQUIRE(muda);
         return muda->type().state() == muda_state::LATER && filter_by_search(muda);
     }
 
-    bool ro_user::filter_by_done(mm::muda_dptr muda)
-    {
+    bool ro_user::filter_by_done(mm::muda_dptr muda) {
         REQUIRE(muda);
         return muda->type().state() == muda_state::DONE && filter_by_search(muda);
     }
 
-    bool ro_user::filter_by_note(mm::muda_dptr muda)
-    {
+    bool ro_user::filter_by_note(mm::muda_dptr muda) {
         REQUIRE(muda);
         return muda->type().state() == muda_state::NOTE && filter_by_search(muda);
     }
 
-    void ro_user::make_now_view(muda_vec& v)
-    {
+    void ro_user::make_now_view(muda_vec& v) {
         mu::filter(v, [&](auto muda) { return this->filter_by_now(muda);});
         muda_list_sort(v);
     }
 
-    void ro_user::make_later_view(muda_vec& v)
-    {
+    void ro_user::make_later_view(muda_vec& v) {
         mu::filter(v, [&](auto muda) { return this->filter_by_later(muda);});
         muda_list_sort(v);
     }
 
-    void ro_user::make_done_view(muda_vec& v)
-    {
+    void ro_user::make_done_view(muda_vec& v) {
         mu::filter(v, [&](auto muda) { return this->filter_by_done(muda);});
         muda_list_sort(v);
     }
 
-    void ro_user::make_note_view(muda_vec& v)
-    {
+    void ro_user::make_note_view(muda_vec& v) {
         mu::filter(v, [&](auto muda) { return this->filter_by_note(muda);});
         muda_list_sort(v);
     }
 
-    void ro_user::make_prioritize_view(muda_vec& v)
-    {
+    void ro_user::make_prioritize_view(muda_vec& v) {
         //filter
         mu::filter(v,
-                [&](auto muda) 
-                { 
-                return muda->type().state() != muda_state::NOTE && this->filter_by_search(muda);
+                [&](auto muda) { 
+                    return muda->type().state() != muda_state::NOTE &&
+                        this->filter_by_search(muda);
                 }); 
 
         muda_list_sort(v);
@@ -416,20 +412,17 @@ namespace mempko::muda::wt
         //put done first, then later, then now
         //This order is important because it will show up in reverse when added to the muda list
         std::stable_sort(
-                v.begin(), v.end(), [](auto a, auto b)
-                { 
-                return static_cast<int>(a->type().state()) > static_cast<int>(b->type().state());
-                }
-                );
+                v.begin(), v.end(), [](auto a, auto b) { 
+                    return static_cast<int>(a->type().state()) >
+                        static_cast<int>(b->type().state());
+                });
     }
 
-    bool ro_user::do_search()
-    {
+    bool ro_user::do_search() {
         INVARIANT(_search_box);
 
         auto mt = _search_box->text().value();
-        if(!mt.empty()) 
-        {
+        if(!mt.empty()) {
             set_search();
             return true;
         }
@@ -437,8 +430,7 @@ namespace mempko::muda::wt
         return mt.size() == 0;
     }
 
-    std::unique_ptr<WApplication> create_ro_user_application(const WEnvironment& env)
-    {
+    std::unique_ptr<WApplication> create_ro_user_application(const WEnvironment& env) {
         auto a = std::make_unique<ro_user>(env);
 
         a->useStyleSheet("resources/style.css");

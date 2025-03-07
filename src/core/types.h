@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -23,8 +23,7 @@
 #include <chrono>
 #include <string>
 
-namespace mempko::muda 
-{ 
+namespace mempko::muda { 
     using text_type = std::string;
     using id_type = long;
     enum class muda_state { NOW, LATER, DONE, NOTE};

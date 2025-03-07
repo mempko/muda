@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -31,10 +31,8 @@
 #include <Wt/WHBoxLayout.h>
 
 #include "core/muda.h"
-#include "core/context.h"
 
-namespace mempko::muda::wt 
-{ 
+namespace mempko::muda::wt { 
     class ro_muda_widget : public Wt::WContainerWidget
     {
         public:
@@ -57,7 +55,7 @@ namespace mempko::muda::wt
             dbo::Session& _session;
     };
 
-    typedef std::list<ro_muda_widget*> ro_muda_widget_list;
+    using ro_muda_widget_list = std::list<ro_muda_widget*>;
 
 }
 

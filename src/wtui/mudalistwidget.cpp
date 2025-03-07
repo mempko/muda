@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -20,10 +20,7 @@
 #include "wtui/mudalistwidget.h"
 #include <memory>
 
-namespace mempko::muda::wt
-{ 
-    using boost::bind;
-    using boost::mem_fn;
+namespace mempko::muda::wt { 
     namespace w = Wt;
 
     muda_list_widget::muda_list_widget(
@@ -31,27 +28,23 @@ namespace mempko::muda::wt
             model::muda_list_dptr mudas, 
             muda_list_widget::mutate_func mut) :
         w::WCompositeWidget{},
-        _mudas{mudas}, _session{s}
-    {
+        _mudas{mudas}, _session{s} {
         auto root = std::make_unique<w::WContainerWidget>();
         _root = root.get();
         setImplementation(std::move(root));
         create_ui(mut);
     }
 
-    muda_list_widget::~muda_list_widget()
-    {
+    muda_list_widget::~muda_list_widget() {
         clear_connections();
     }
 
-    void muda_list_widget::clear_connections()
-    {
+    void muda_list_widget::clear_connections() {
         for(auto c : _connections) c.disconnect();
         _connections.clear();
     }
 
-    void muda_list_widget::create_ui(muda_list_widget::mutate_func mut)
-    {
+    void muda_list_widget::create_ui(muda_list_widget::mutate_func mut) {
         dbo::Transaction t{_session};
         _root->resize(w::WLength(100, w::WLength::Unit::Percentage), w::WLength::Auto);
 
@@ -63,12 +56,13 @@ namespace mempko::muda::wt
         for(const auto& m : vec) add_muda(m);
     }
 
-    void muda_list_widget::add_muda(model::muda_dptr muda)
-    {
+    void muda_list_widget::add_muda(model::muda_dptr muda) {
         REQUIRE(muda);
 
         _connections.push_back(muda.modify()->when_text_changes(
-                    [this]() { fire_update_sig();}));
+                    [this]() {
+                        fire_update_sig();
+                    }));
 
         //create new muda widget and add it to widget list
         auto new_widget = std::make_unique<muda_widget>(_session, muda);
@@ -76,20 +70,25 @@ namespace mempko::muda::wt
 
         _connections.push_back(new_widget->when_delete_pressed(
                     [this](auto id, auto widget) { 
-                    remove_muda(id, widget);
+                        remove_muda(id, widget);
                     }));
+
         _connections.push_back(new_widget->when_type_pressed(
-                    [this]() { fire_update_sig(); }));
+                    [this]() {
+                        fire_update_sig();
+                    }));
 
 
-        if(_muda_widgets.empty()) _root->addWidget(std::move(new_widget));
-        else _root->insertBefore(std::move(new_widget), _muda_widgets.back());
+        if(_muda_widgets.empty()) {
+            _root->addWidget(std::move(new_widget));
+        } else {
+            _root->insertBefore(std::move(new_widget), _muda_widgets.back());
+        }
 
         _muda_widgets.push_back(new_widget_p);
     }
 
-    void muda_list_widget::remove_muda(id_type id, muda_widget* widget)
-    {
+    void muda_list_widget::remove_muda(id_type id, muda_widget* widget) {
         REQUIRE(widget);
         dbo::Transaction t{_session};
 
@@ -102,8 +101,7 @@ namespace mempko::muda::wt
         _root->removeWidget(widget);
     }
 
-    void muda_list_widget::fire_update_sig()
-    {
+    void muda_list_widget::fire_update_sig() {
         INVARIANT(this);
         _update_sig();
     }

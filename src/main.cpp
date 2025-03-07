@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -36,9 +36,7 @@ using namespace Wt;
 
 namespace mt = mempko::muda::wt;
 
-int main(int argc, char **argv)
-try 
-{
+int main(int argc, char **argv) try {
     Wt::WServer server{argv[0]};
 
     server.setServerConfiguration(argc, argv, WTHTTP_CONFIGURATION);
@@ -47,20 +45,15 @@ try
 
     mt::session::configure_auth();
 
-    if (server.start()) 
-    {
+    if (server.start()) {
         Wt::WServer::waitForShutdown();
         server.stop();
     }
     return 0;
-} 
-catch (Wt::WServer::Exception& e) 
-{
+} catch (Wt::WServer::Exception& e) {
     std::cerr << e.what() << std::endl;
     return 1;
-} 
-catch (std::exception &e) 
-{
+} catch (std::exception &e) {
     std::cerr << "exception: " << e.what() << std::endl;
     return 1;
 }

@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -33,10 +33,8 @@
 #include "core/muda.h"
 #include "core/context.h"
 
-namespace mempko::muda::wt 
-{ 
-    class muda_widget : public Wt::WContainerWidget
-    {
+namespace mempko::muda::wt { 
+    class muda_widget : public Wt::WContainerWidget {
         public:
             muda_widget(
                     dbo::Session& s,
@@ -44,13 +42,15 @@ namespace mempko::muda::wt
             ~muda_widget();
 
         public:
-            typedef boost::signals2::connection connection;
-            typedef boost::signals2::signal<void (id_type, muda_widget*)> delete_sig;
-            typedef delete_sig::slot_type delete_slot;
+
+            using connection = boost::signals2::connection;
+            using delete_sig = boost::signals2::signal<void (id_type, muda_widget*)>;
+            using delete_slot = delete_sig::slot_type;
+
             connection when_delete_pressed(const delete_slot& slot);
 
-            typedef boost::signals2::signal<void ()> type_sig;
-            typedef type_sig::slot_type type_slot;
+            using type_sig = boost::signals2::signal<void ()>;
+            using type_slot = type_sig::slot_type;
             connection when_type_pressed(const type_slot& slot);
 
         private:
@@ -81,10 +81,9 @@ namespace mempko::muda::wt
             dbo::Session& _session;
             bool _dirty = false;
             bool _enter = false;
-
     };
 
-    typedef std::list<muda_widget*> muda_widget_list;
+    using muda_widget_list = std::list<muda_widget*>;
 
 }
 #endif

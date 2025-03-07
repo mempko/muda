@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -23,8 +23,7 @@
 #include <iostream>
 #include <boost/assert.hpp>
 
-namespace mempko::dci
-{ 
+namespace mempko::dci { 
 #define ADD_SELF(t) \
     t* const self() { return static_cast<t*>(this);} \
     const t* self() const { return static_cast<const t*>(this);} 

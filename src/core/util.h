@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -25,11 +25,9 @@
 
 #include <algorithm>
 
-namespace mempko::muda::util 
-{ 
+namespace mempko::muda::util { 
     template<class Vec, class Predicate>
-        void filter(Vec& v, Predicate p)
-        {
+        void filter(Vec& v, Predicate p) {
             v.erase(std::remove_if(v.begin(), v.end(),
                         [&](auto val) {return !p(val);}), v.end());
         }

@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -20,18 +20,15 @@
 #include "wtui/session.h"
 #include <memory>
 
-namespace mempko::muda::wt 
-{ 
-    namespace 
-    {
+namespace mempko::muda::wt { 
+    namespace {
         wo::AuthService auth_service;
         wo::PasswordService password_service{auth_service};
         oauth_service_list oauth_services;
         oauth_service_ptr_list oauth_service_ptrs;
     }
 
-    void session::configure_auth()
-    {
+    void session::configure_auth() {
         auth_service.setAuthTokensEnabled(true, "muda");
         auth_service.setEmailVerificationEnabled(true);
 
@@ -45,13 +42,11 @@ namespace mempko::muda::wt
             oauth_services.push_back(std::make_shared<wo::GoogleService>(auth_service));
     }
 
-    session::session(const std::string& db)
-    {
+    session::session(const std::string& db) {
         connect(db);
     }
 
-    void session::connect(const std::string& db)
-    {
+    void session::connect(const std::string& db) {
         auto con = std::make_unique<dbo::backend::Postgres>();
         con->connect(db);
 
@@ -67,30 +62,25 @@ namespace mempko::muda::wt
         _users.reset(new user_database{_session});
 
         dbo::Transaction t{_session};
-        try
-        {
+        try {
             _session.createTables();
 
             auto guest = _users->registerNew();
             guest.addIdentity(wo::Identity::LoginName, "guest");
             password_service.updatePassword(guest, "guest");
             Wt::log("info") << "Database created";
-        }
-        catch(std::exception& e)
-        {
+        } catch(std::exception& e) {
             Wt::log("info") << "Using existing database: " << e.what();
         }
 
         t.commit();
     }
 
-    void session::logout()
-    {
+    void session::logout() {
         _login.logout();
     }
 
-    model::user_dptr session::user() const
-    {
+    model::user_dptr session::user() const {
         REQUIRE(_login.loggedIn());
         INVARIANT(_users);
 
@@ -98,8 +88,7 @@ namespace mempko::muda::wt
         CHECK(auth);
 
         auto user = auth->user();
-        if(!user)
-        {
+        if(!user) {
             user = _session.add(std::make_unique<model::user>());
             auth.modify()->setUser(user);
         }
@@ -108,49 +97,45 @@ namespace mempko::muda::wt
         return user;
     }
 
-    model::user_dptr session::ro_user(const std::string& name) const
-    {
+    model::user_dptr session::ro_user(const std::string& name) const {
         INVARIANT(_users);
-        auto auth_user = _users->findWithIdentity(wo::Identity::LoginName, name.c_str());
+        auto auth_user =
+            _users->findWithIdentity(wo::Identity::LoginName, name.c_str());
+
         auto auth = _users->find(auth_user);
 
-        return auth ?  auth->user() : model::user_dptr{};
-
+        return auth ? auth->user() : model::user_dptr{};
     }
 
-    std::string session::user_name() const
-    {
+    std::string session::user_name() const {
         REQUIRE(_login.loggedIn());
         return _login.user().identity(wo::Identity::LoginName).toUTF8();
     }
 
-    std::string session::email() const
-    {
+    std::string session::email() const {
         REQUIRE(_login.loggedIn());
         return _login.user().email();
     }
 
-    wo::AbstractUserDatabase& session::users()
-    {
+    wo::AbstractUserDatabase& session::users() {
         INVARIANT(_users);
         return *_users;
     }
 
-    const wo::AuthService& session::auth()
-    {
+    const wo::AuthService& session::auth() {
         return auth_service;
     }
 
-    const wo::AbstractPasswordService& session::password_auth()
-    {
+    const wo::AbstractPasswordService& session::password_auth() {
         return password_service;
     }
 
-    const oauth_service_ptr_list& session::oauth()
-    {
-        if(oauth_service_ptrs.empty())
-            for(auto a : oauth_services)
+    const oauth_service_ptr_list& session::oauth() {
+        if(oauth_service_ptrs.empty()) {
+            for(auto a : oauth_services) {
                 oauth_service_ptrs.push_back(a.get());
+            }
+        }
         return oauth_service_ptrs;
     };
 }

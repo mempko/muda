@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -19,10 +19,7 @@
 
 #include "wtui/romudalistwidget.h"
 
-namespace mempko::muda::wt
-{ 
-    using boost::bind;
-    using boost::mem_fn;
+namespace mempko::muda::wt { 
     namespace w = Wt;
 
     ro_muda_list_widget::ro_muda_list_widget(
@@ -30,8 +27,8 @@ namespace mempko::muda::wt
             model::muda_list_dptr mudas, 
             ro_muda_list_widget::mutate_func mut) :
         w::WCompositeWidget{},
-        _mudas{mudas}, _session{s}
-    {
+        _mudas{mudas}, _session{s} {
+
         auto root = std::make_unique<w::WContainerWidget>();
         _root = root.get();
 
@@ -41,8 +38,7 @@ namespace mempko::muda::wt
 
     ro_muda_list_widget::~ro_muda_list_widget() {}
 
-    void ro_muda_list_widget::create_ui(ro_muda_list_widget::mutate_func mut)
-    {
+    void ro_muda_list_widget::create_ui(ro_muda_list_widget::mutate_func mut) {
         dbo::Transaction t{_session};
         _root->resize(w::WLength(100, w::WLength::Unit::Percentage), w::WLength::Auto);
 
@@ -51,19 +47,23 @@ namespace mempko::muda::wt
         auto vec = muda_vec{std::begin(list), std::end(list)};
         mut(vec);
 
-        for(const auto& m : vec) add_muda(m);
+        for(const auto& m : vec) {
+            add_muda(m);
+        }
     }
 
-    void ro_muda_list_widget::add_muda(model::muda_dptr muda)
-    {
+    void ro_muda_list_widget::add_muda(model::muda_dptr muda) {
         REQUIRE(muda);
 
         //create new muda widget and add it to widget list
         auto new_widget = std::make_unique<ro_muda_widget>(_session, muda);
         auto new_widget_p = new_widget.get();
 
-        if(_muda_widgets.empty()) _root->addWidget(std::move(new_widget));
-        else _root->insertBefore(std::move(new_widget), _muda_widgets.back());
+        if(_muda_widgets.empty()) {
+            _root->addWidget(std::move(new_widget));
+        } else {
+            _root->insertBefore(std::move(new_widget), _muda_widgets.back());
+        }
 
         _muda_widgets.push_back(new_widget_p);
     }

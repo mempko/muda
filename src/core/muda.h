@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -42,15 +42,13 @@
 
 
 namespace dbo = Wt::Dbo;
-#define LOCK boost::mutex::scoped_lock lll(this->mutex())
+#define LOCK std::scoped_lock lll(this->mutex())
 
-namespace mempko::muda::model
-{ 
+namespace mempko::muda::model { 
     class muda_type : 
         public role::lockable,
         public role::transitional_state<muda_type>,
-        public role::ptime_stampable_when_modified<muda_type>
-    {
+        public role::ptime_stampable_when_modified<muda_type> {
 
         public:
             muda_state state() const { return _state;} 
@@ -73,15 +71,13 @@ namespace mempko::muda::model
 namespace Wt::Dbo {
     template <class Action>
         void field(Action& action, mempko::muda::model::muda_type& t,
-                const std::string& name, int size = -1)
-        {
+                const std::string& name, int size = -1) {
             field(action, t._state, name + "_ts");
             field(action, t._modified, name + "_tm");
         }
 }
 
-namespace mempko::muda::model
-{ 
+namespace mempko::muda::model { 
     class muda_list;
     using muda_list_dptr = dbo::ptr<muda_list>;
 
@@ -90,8 +86,7 @@ namespace mempko::muda::model
         public role::modifable_text<muda>,
         public role::simple_id_reciever<muda>,
         public role::ptime_stampable_when_created<muda>,
-        public role::ptime_stampable_when_modified<muda>
-    {
+        public role::ptime_stampable_when_modified<muda> {
         public:
             const text_type& text() const { return _text;}
             void text(const text_type& text) { LOCK; _text = text;}
@@ -118,8 +113,7 @@ namespace mempko::muda::model
 
         public:
             template<class Action>
-                void persist(Action& a)
-                {
+                void persist(Action& a) {
                     namespace dbo = Wt::Dbo;
                     dbo::field(a, _id, "mid");
                     dbo::field(a, _text, "text");
@@ -165,12 +159,9 @@ namespace mempko::muda::model
             list_type::size_type size() const { return _list.size();}
 
             template <class pred>
-                void remove_if(pred p)
-                {
-                    for(auto c : _list)
-                    {
-                        if(p(c))
-                        {
+                void remove_if(pred p) {
+                    for(auto c : _list) {
+                        if(p(c)) {
                             _list.erase(c);
                             c.remove();
                             break;
@@ -188,8 +179,7 @@ namespace mempko::muda::model
 
         public:
             template<class Action>
-                void persist(Action& a)
-                {
+                void persist(Action& a) {
                     dbo::field(a, _name, "name");
                     dbo::field(a, _is_public, "is_public");
                     dbo::hasMany(a, _list, dbo::ManyToOne, "list");
@@ -205,8 +195,7 @@ namespace mempko::muda::model
     using auth_infos = dbo::collection<auth_info_dptr>;
     using users = dbo::collection<user_dptr>;
 
-    class user : public dbo::Dbo<user>
-    {
+    class user : public dbo::Dbo<user> {
         public:
             const text_type& name() const { return _name;}
             text_type& name() { return _name;}
@@ -225,8 +214,7 @@ namespace mempko::muda::model
 
         public:
             template<class Action>
-                void persist(Action& a)
-                {
+                void persist(Action& a) {
                     dbo::field(a, _name, "name");
                     dbo::hasMany(a, _lists, dbo::ManyToOne, "muser");
                     dbo::hasMany(a, _auth_infos, Wt::Dbo::ManyToOne, "user");
@@ -238,9 +226,7 @@ namespace mempko::muda::model
 #undef LOCK
 }
 
-namespace mempko::muda::context
-{ 
-    //useful typedefs
+namespace mempko::muda::context { 
     using add_muda = add_object<model::muda,model::muda_dptr, model::muda_list>;
     using remove_muda = remove_object<model::muda_list_dptr, id_type>;
     using modify_muda_text = modify_text_context<model::muda>;
@@ -248,4 +234,5 @@ namespace mempko::muda::context
 
 BOOST_CLASS_VERSION(mempko::muda::model::muda_type,1)
 BOOST_CLASS_VERSION(mempko::muda::model::muda,1)
+
 #endif

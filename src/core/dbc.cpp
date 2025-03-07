@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -24,55 +24,44 @@
 #include <execinfo.h>
 #endif
 
-namespace mempko 
-{
-    namespace muda 
-    {
-        namespace util 
-        {
-            namespace 
-            {
-                const size_t TRACE_SIZE = 16;
-            }
+namespace mempko::muda::util {
+    namespace {
+        const size_t TRACE_SIZE = 16;
+    }
 
 #ifdef _WIN64
-            void trace() {}
+    void trace() {}
 #else
-            void trace()
-            {
-                void *t[TRACE_SIZE];
-                auto size = backtrace(t, TRACE_SIZE);
-                auto s = backtrace_symbols (t, size);
-                for (int i = 0; i < size; i++)
-                    std::cerr << s[i] << std::endl;
+    void trace() {
+        void *t[TRACE_SIZE];
+        auto size = backtrace(t, TRACE_SIZE);
+        auto s = backtrace_symbols (t, size);
+        for (int i = 0; i < size; i++)
+            std::cerr << s[i] << std::endl;
 
-                std::free(s);
-            }
+        std::free(s);
+    }
 #endif
 
-            void raise(const char * msg) 
-            {
-                std::cerr << msg << std::endl;
-                trace();
-                exit(1);
-            }
+    void raise(const char * msg) {
+        std::cerr << msg << std::endl;
+        trace();
+        exit(1);
+    }
 
-            void raise1( 
-                    const char * file,
-                    const char * func,
-                    const int line,
-                    const char * dbc,
-                    const char * expr)
-            {
-                std::stringstream s;
-                s << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                s << "!! " << dbc << " failed" << std::endl;
-                s << "!! expr: " << expr << std::endl;
-                s << "!! func: " << func << std::endl;
-                s << "!! file: " << file << " (" << line << ")" << std::endl;
-                s << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-                raise(s.str().c_str());
-            }
-        }
+    void raise1( 
+            const char * file,
+            const char * func,
+            const int line,
+            const char * dbc,
+            const char * expr) {
+        std::stringstream s;
+        s << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+        s << "!! " << dbc << " failed" << std::endl;
+        s << "!! expr: " << expr << std::endl;
+        s << "!! func: " << func << std::endl;
+        s << "!! file: " << file << " (" << line << ")" << std::endl;
+        s << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+        raise(s.str().c_str());
     }
 }

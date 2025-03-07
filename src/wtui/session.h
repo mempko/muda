@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -40,16 +40,14 @@
 
 namespace wo = Wt::Auth;
 
-namespace mempko::muda::wt 
-{ 
+namespace mempko::muda::wt { 
     using oath_service_ptr = std::shared_ptr<wo::OAuthService>;
     using oauth_service_list = std::vector<oath_service_ptr>;
     using oauth_service_ptr_list = std::vector<const wo::OAuthService*>;
     using user_database = wo::Dbo::UserDatabase<model::auth_info>;
     using user_database_ptr = std::shared_ptr<user_database>;
 
-    class session
-    {
+    class session {
         public:
             static void configure_auth();
 

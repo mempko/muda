@@ -1,5 +1,5 @@
 /**
-* Copyright (C) 2015  Maxim Noah Khailo
+* Copyright (C) 2025  Maxim Noah Khailo
 *
 * This file is part of Muda.
 * 
@@ -31,14 +31,12 @@
 
 #include "wtui/romudawidget.h"
 
-namespace mempko::muda::wt
-{ 
+namespace mempko::muda::wt { 
     using muda_vec = std::vector<model::muda_dptr>;
 
-    class ro_muda_list_widget : public Wt::WCompositeWidget
-    {
+    class ro_muda_list_widget : public Wt::WCompositeWidget {
         public:
-            typedef boost::function<void (muda_vec&)> mutate_func;
+            using mutate_func = boost::function<void (muda_vec&)>;
             ro_muda_list_widget(
                     dbo::Session& s,
                     model::muda_list_dptr mudas, 
