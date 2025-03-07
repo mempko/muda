@@ -337,7 +337,7 @@ namespace mempko::muda::wt {
         std::string search = _search_box->text().toUTF8();
         std::string regex = anyChar + search + anyChar;
 
-        boost::regex e{regex};
+        std::regex e{regex};
         _set_search = e;
     } catch(std::exception& e) {
         Wt::log("error") << "regex error" << e.what();
@@ -354,7 +354,7 @@ namespace mempko::muda::wt {
         if(!_search) {
             return true;
         }
-        return boost::regex_match(muda->text(), _search.value());
+        return std::regex_match(muda->text(), _search.value());
     } catch(...) {
         return false;
     }

@@ -23,6 +23,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <regex>
 
 #include <Wt/WApplication.h>
 #include <Wt/WBreak.h>
@@ -37,8 +38,6 @@
 #include <Wt/WServer.h>
 #include <Wt/WEnvironment.h>
 
-#include <boost/regex.hpp>
-
 #include "core/muda.h"
 #include "wtui/mudalistwidget.h"
 #include "wtui/session.h"
@@ -46,7 +45,7 @@
 
 
 namespace mempko::muda::wt { 
-    using optional_regex = std::optional<boost::regex>;
+    using optional_regex = std::optional<std::regex>;
 
     class rw_user : public Wt::WApplication {
         public:
