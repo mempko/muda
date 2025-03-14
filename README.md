@@ -23,7 +23,7 @@ Building
 mkdir build
 cd build
 cmake ..
-make 
+cmake --build . 
 ````
 
 Running
